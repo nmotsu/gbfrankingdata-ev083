@@ -1474,7 +1474,7 @@ function execSavePNG() {
         ctx.fillText(String(p.rank ?? '-'), tx, textY);
 
       } else if (k === 'rankChange') {
-        // ↑↓→NEW — サイトの formatChange と完全一致
+        // ▲▼→NEW — サイトの formatChange と完全一致
         if (p.prevRank == null) {
           ctx.fillStyle = colorSuccess;
           ctx.fillText('NEW', tx, textY);
@@ -1482,10 +1482,10 @@ function execSavePNG() {
           const rc = p.rankChange ?? 0;
           if (rc > 0) {
             ctx.fillStyle = colorUp; // .up = --md-primary = elemColor
-            ctx.fillText(`↑${rc}`, tx, textY);
+            ctx.fillText(`▲${rc}`, tx, textY);
           } else if (rc < 0) {
             ctx.fillStyle = colorDown;
-            ctx.fillText(`↓${Math.abs(rc)}`, tx, textY);
+            ctx.fillText(`▼${Math.abs(rc)}`, tx, textY);
           } else {
             ctx.fillStyle = textMuted;
             ctx.fillText('→', tx, textY);
@@ -2562,8 +2562,8 @@ function renderRanking(data) {
 function formatChange(prevRank, rank) {
   if (prevRank === null || prevRank === undefined) return '<span class="new">NEW</span>';
   const d = prevRank - rank;
-  if (d > 0) return `<span class="up">↑${d}</span>`;
-  if (d < 0) return `<span class="down">↓${Math.abs(d)}</span>`;
+  if (d > 0) return `<span class="up">▲${d}</span>`;
+  if (d < 0) return `<span class="down">▼${Math.abs(d)}</span>`;
   return '<span class="flat">→</span>';
 }
 
