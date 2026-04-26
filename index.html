@@ -142,8 +142,8 @@ function ensureChartJs() {
   .medal-1 { color: var(--md-warning); }
   .medal-2 { color: #c0c0c0; }
   .medal-3 { color: #cd7c32; }
-  .up   { color: var(--md-primary); }
-  .down { color: var(--md-error); }
+  .up   { color: #60a5fa; }
+  .down { color: #f87171; }
   .new  { color: var(--md-success); }
   .flat { color: var(--md-on-surface-variant); }
   select, input { background: var(--md-surface-container-high); border: 1px solid var(--md-outline); color: var(--md-on-surface); border-radius: var(--md-shape-sm); padding: 6px 12px; font-size: 0.8125rem; transition: border-color var(--md-duration-short) var(--md-ease); }
@@ -172,7 +172,8 @@ function ensureChartJs() {
   th.sortable { cursor: pointer; }
   th.sortable:hover { color: var(--md-on-surface); }
   .sort-ind { font-size: 0.5625rem; margin-left: 2px; color: var(--md-on-surface-variant); }
-  .sort-ind.active { color: var(--md-primary); }
+  .sort-ind.asc  { color: #60a5fa; }
+  .sort-ind.desc { color: #f87171; }
   /* カラムリサイズ */
   .col-resize-handle {
     position: absolute; right: -1px; top: 0; width: 9px; height: 100%;
@@ -653,12 +654,13 @@ function ensureChartJs() {
       <button class="help-tab" id="htab-battle" onclick="switchHelpTab('battle')">バトルモード</button>
       <button class="help-tab" id="htab-history" onclick="switchHelpTab('history')">プレイヤー履歴</button>
       <button class="help-tab" id="htab-graph" onclick="switchHelpTab('graph')">グラフ</button>
+      <button class="help-tab" id="htab-legend" onclick="switchHelpTab('legend')">表示の見方</button>
     </div>
     <div class="modal-body" style="padding:16px 18px;overflow-y:auto;min-height:420px">
 
       <!-- ===== ランキング種別 ===== -->
       <div id="hpanel-ranking" class="help-panel">
-        <p class="help-panel-desc">タブを切り替えると4種類のランキングが表示されます。それぞれ集計期間が異なります。</p>
+        <p class="help-panel-desc">タブを切り替えると4種類のランキングが表示されます。それぞれ集計期間が異なります。<br><strong style="color:#4ade80">残業・朝活・日速</strong> は集計期間中に新しいスナップが届くたび <strong style="color:var(--md-on-surface)">最新までの累計</strong>でライブ更新され、ステータスバーに <span style="color:#4ade80;font-weight:700">(進行中)</span> バッジが表示されます。</p>
         <svg viewBox="0 0 520 170" style="width:100%;max-width:520px;display:block;margin:0 auto;overflow:visible">
           <line x1="40" y1="88" x2="490" y2="88" stroke="#2d2d5e" stroke-width="2"/>
           <line x1="40"  y1="82" x2="40"  y2="94" stroke="#4b5563" stroke-width="1.5"/>
@@ -694,27 +696,28 @@ function ensureChartJs() {
         <div class="help-grid">
           <div class="help-grid-item" style="border-left:3px solid var(--elem-color)">
             <div style="color:var(--elem-color);font-weight:700">残業</div>
-            <div style="color:var(--md-on-surface-variant);margin-top:4px">0:00 〜 7:00（深夜帯）の貢献度増加量</div>
+            <div style="color:var(--md-on-surface-variant);margin-top:4px">0:00 → 7:00（深夜帯）の累計増加量。期間中は最新スナップまでライブ更新、7:00 到達で確定。</div>
           </div>
           <div class="help-grid-item" style="border-left:3px solid #fbbf24">
             <div style="color:#fbbf24;font-weight:700">朝活</div>
-            <div style="color:var(--md-on-surface-variant);margin-top:4px">7:00 〜 8:00（朝の1時間）の貢献度増加量</div>
+            <div style="color:var(--md-on-surface-variant);margin-top:4px">7:00 → 8:00（朝の1時間）の累計増加量。期間中はライブ更新、8:00 到達で確定。</div>
           </div>
           <div class="help-grid-item" style="border-left:3px solid #4ade80">
             <div style="color:#4ade80;font-weight:700">日速</div>
-            <div style="color:var(--md-on-surface-variant);margin-top:4px">7:00 〜 0:00（1日全体）の貢献度増加量</div>
+            <div style="color:var(--md-on-surface-variant);margin-top:4px">7:00 → 翌0:00（1日全体）の累計増加量。期間中はライブ更新、翌0:00 到達で確定。</div>
           </div>
           <div class="help-grid-item" style="border-left:3px solid #93c5fd">
             <div style="color:#93c5fd;font-weight:700">20分速</div>
             <div style="color:var(--md-on-surface-variant);margin-top:4px">直前スナップから最新スナップまでの差分。スナップは約20分間隔で収集されます。</div>
           </div>
         </div>
-        <div class="help-tip" style="margin-top:12px">いずれのランキングも、ページ上部の古戦場イベント選択と連動しています。</div>
+        <div class="help-tip" style="margin-top:12px"><strong style="color:#4ade80">(進行中)</strong> バッジ：その期間がまだ確定していないことを示します。新しいスナップが届くたびに「開始時刻 → 最新スナップ」の累計で再計算されます。集計の終了時刻スナップが揃うと自動的にバッジが消え、固定表示に切り替わります。</div>
+        <div class="help-tip" style="margin-top:8px">いずれのランキングも、ページ上部の古戦場イベント選択と連動しています。</div>
       </div>
 
       <!-- ===== スナップ選択 ===== -->
       <div id="hpanel-snap" class="help-panel" style="display:none">
-        <p class="help-panel-desc">20分速タブでは、スナップショット（収集時刻）を手動で選んで過去の任意時点のデータを確認できます。</p>
+        <p class="help-panel-desc"><strong style="color:#93c5fd">20分速タブ専用</strong>の機能です。スナップショット（収集時刻）を手動で選んで過去の任意時点のデータを確認できます。<br>残業・朝活・日速タブは時刻選択不要・自動でライブ更新されます。</p>
         <svg viewBox="0 0 480 150" style="width:100%;max-width:480px;display:block;margin:0 auto">
           <rect x="8" y="8" width="464" height="40" rx="5" fill="#0d0d22" stroke="#2d2d5e" stroke-width="1"/>
           <text x="18" y="32" fill="#64748b" font-size="11">日付:</text>
@@ -750,6 +753,7 @@ function ensureChartJs() {
           </div>
         </div>
         <div class="help-tip" style="margin-top:8px"><strong style="color:var(--md-on-surface)">キーボード操作:</strong> 時間選択は ← → キーで1スナップずつ移動できます。入力欄にフォーカスしていない状態で有効です。</div>
+        <div class="help-tip" style="margin-top:8px"><strong style="color:var(--md-on-surface)">他のタブでは:</strong> 残業・朝活・日速タブにはこの時刻ナビは表示されません。各期間の開始スナップから最新スナップまでの累計が常に自動表示されます。</div>
       </div>
 
       <!-- ===== バトルモード ===== -->
@@ -916,6 +920,38 @@ function ensureChartJs() {
           </div>
         </div>
       </div>
+
+      <!-- ===== 表示の見方（色凡例） ===== -->
+      <div id="hpanel-legend" class="help-panel" style="display:none">
+        <p class="help-panel-desc">テーブルの記号や色の意味です。順位変動の <strong style="color:#60a5fa">▲</strong>/<strong style="color:#f87171">▼</strong> はイベント属性色（火・水など）に関わらず常に同じ色で表示されます。</p>
+        <div class="help-grid">
+          <div class="help-grid-item" style="border-left:3px solid #60a5fa">
+            <div style="color:#60a5fa;font-weight:700;margin-bottom:4px">▲ 青 / NEW</div>
+            <div style="color:var(--md-on-surface-variant);font-size:12px">順位上昇（前回比で上がった）。<strong style="color:#4ade80">NEW</strong> は前スナップに存在しなかった新規ランクイン。テーブルヘッダのソート ▲（昇順）も同じ青色。</div>
+          </div>
+          <div class="help-grid-item" style="border-left:3px solid #f87171">
+            <div style="color:#f87171;font-weight:700;margin-bottom:4px">▼ 赤</div>
+            <div style="color:var(--md-on-surface-variant);font-size:12px">順位下降（前回比で下がった）。テーブルヘッダのソート ▼（降順）も同じ赤色。</div>
+          </div>
+          <div class="help-grid-item" style="border-left:3px solid #94a3b8">
+            <div style="color:#94a3b8;font-weight:700;margin-bottom:4px">→ グレー</div>
+            <div style="color:var(--md-on-surface-variant);font-size:12px">順位変動なし（前回と同じ）。</div>
+          </div>
+          <div class="help-grid-item" style="border-left:3px solid var(--elem-color)">
+            <div style="color:var(--elem-color);font-weight:700;margin-bottom:4px">イベント属性色</div>
+            <div style="color:var(--md-on-surface-variant);font-size:12px">ヘッダ・タブ等の装飾色は古戦場の属性（火/水/風/土/光/闇）で変わりますが、データの読み取りには影響しません。</div>
+          </div>
+          <div class="help-grid-item" style="border-left:3px solid #fbbf24">
+            <div style="color:#fbbf24;font-weight:700;margin-bottom:4px">トップ3</div>
+            <div style="color:var(--md-on-surface-variant);font-size:12px">表示順位 1〜3 位はメダル色（金・銀・銅）でハイライト。</div>
+          </div>
+          <div class="help-grid-item" style="border-left:3px solid #4ade80">
+            <div style="color:#4ade80;font-weight:700;margin-bottom:4px">(進行中) バッジ</div>
+            <div style="color:var(--md-on-surface-variant);font-size:12px">残業/朝活/日速の集計期間中に表示。終了スナップが揃うと自動で消えます。</div>
+          </div>
+        </div>
+      </div>
+
       <div style="border-top:1px solid var(--md-outline-variant);margin-top:16px;padding-top:12px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
         <a id="modal-privacy-link" href="/privacy.html" style="font-size:0.75rem;color:var(--md-on-surface-variant);text-decoration:none" class="hover:underline">プライバシーポリシー</a>
         <a id="modal-contact-link" href="/contact.html" style="font-size:0.75rem;color:var(--md-on-surface-variant);text-decoration:none" class="hover:underline">お問い合わせ</a>
@@ -1387,7 +1423,7 @@ function execSavePNG() {
   const colorWarn   = '#fbbf24';
   const colorErr    = '#f87171';
   const colorGN     = textMain;
-  const colorUp     = elemColor;
+  const colorUp     = '#60a5fa';
   const colorDown   = colorErr;
   // top3 行背景：くっきり視認できる彩度
   const bg1         = '#3d2c00';   // 金：深みのある琥珀
@@ -1720,7 +1756,7 @@ function renderThead() {
     const def = COL_DEFS[key];
     const isActive = def.sortKey === sortKey;
     const siText = isActive ? (sortDir === -1 ? '▼' : '▲') : '⇅';
-    const siCls  = `sort-ind${isActive ? ' active' : ''}`;
+    const siCls  = isActive ? (sortDir === -1 ? 'sort-ind desc' : 'sort-ind asc') : 'sort-ind';
     const alignSt = def.align === 'right' ? 'text-align:right;' : '';
     return `<th class="sortable col-th" style="${alignSt}" data-col="${key}" data-colidx="${i}" draggable="true">${def.label}<span id="si-${key}" class="${siCls}">${siText}</span><div class="col-resize-handle"></div></th>`;
   }).join('');
@@ -1837,7 +1873,7 @@ function updateSortIndicators() {
     const el = document.getElementById(`si-${key}`);
     if (!el) continue;
     const isActive = def.sortKey === sortKey;
-    el.className   = `sort-ind${isActive ? ' active' : ''}`;
+    el.className   = isActive ? (sortDir === -1 ? 'sort-ind desc' : 'sort-ind asc') : 'sort-ind';
     el.textContent = isActive ? (sortDir === -1 ? '▼' : '▲') : '⇅';
   }
 }
@@ -2425,11 +2461,13 @@ async function reload() {
 }
 
 const TYPE_META = {
-  '20分速': { label: '20分速', cls: 'type-20min',     desc: '直前 → 最新スナップ' },
-  '朝活':   { label: '朝活',   cls: 'type-morning',   desc: '7:00 → 8:00' },
-  '日速':   { label: '日速',   cls: 'type-daily',     desc: '7:00 → 0:00' },
-  '日速(進行中)': { label: '日速', cls: 'type-daily', desc: '7:00 → 最新' },
-  '残業':   { label: '残業',   cls: 'type-overnight', desc: '0:00 → 7:00' },
+  '20分速':       { label: '20分速', cls: 'type-20min',     desc: '直前 → 最新スナップ' },
+  '朝活':         { label: '朝活',   cls: 'type-morning',   desc: '7:00 → 8:00' },
+  '朝活(進行中)': { label: '朝活',   cls: 'type-morning',   desc: '7:00 → 最新' },
+  '日速':         { label: '日速',   cls: 'type-daily',     desc: '7:00 → 0:00' },
+  '日速(進行中)': { label: '日速',   cls: 'type-daily',     desc: '7:00 → 最新' },
+  '残業':         { label: '残業',   cls: 'type-overnight', desc: '0:00 → 7:00' },
+  '残業(進行中)': { label: '残業',   cls: 'type-overnight', desc: '0:00 → 最新' },
 };
 
 function renderRanking(data) {
@@ -2477,16 +2515,15 @@ function renderRanking(data) {
   document.getElementById('stat-range').textContent = `${bef} → ${aft}`;
   const active   = data.players.filter(p => p.honorDiff > 0);
   const topHonor = Math.max(0, ...active.map(p => p.honorDiff));
-  // 日速 isLive 対応: タブサブテキストとバッジを動的切替
-  const isLiveDaily = data.type === '日速' && data.isLive;
-  const metaKey = isLiveDaily ? '日速(進行中)' : data.type;
+  // isLive 対応: タブサブテキストとバッジを動的切替（日速/朝活/残業 共通）
+  const metaKey = data.isLive ? `${data.type}(進行中)` : data.type;
   const meta    = TYPE_META[metaKey] || { label: data.type || '', cls: 'type-20min' };
   const badgeEl = document.getElementById('type-badge-label');
   badgeEl.textContent = meta.label;
   badgeEl.className   = `type-badge ${meta.cls}`;
-  // タブのサブテキストを更新
+  // タブのサブテキストを更新（日速のみ）
   const dailySubEl = document.getElementById('tab-daily-sub');
-  if (dailySubEl) dailySubEl.textContent = isLiveDaily ? '7:00→最新' : '7:00→0:00';
+  if (dailySubEl) dailySubEl.textContent = (data.type === '日速' && data.isLive) ? '7:00→最新' : '7:00→0:00';
 
   // 更新中バッジ: afterPlayerCount が 2000未満なら表示
   const updBadge = document.getElementById('updating-badge');
