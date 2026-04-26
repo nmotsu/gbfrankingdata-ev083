@@ -1063,6 +1063,8 @@ window.__STATIC_INDEX_URL__='https://gbfranking.com/';
 window.__STATIC_BORDER_URL__='https://border.gbfranking.com/';
 window.__STATIC_LIVE_URL__='';
 window.__STATIC_HAS_GUILD__=false;
+window.__STATIC_GUILD_LATEST_URL__='https://ev082.gbfranking.com/guild';
+window.__STATIC_EVENT_GUILD_URLS__={"6":"https://ev082.gbfranking.com/guild"};
 window.__STATIC_CACHE__=null;
 window.__STATIC_CACHE_PROMISE__=fetch('./data.json.gz')
   .then(function(r){return r.ok?r.arrayBuffer():Promise.reject('HTTP '+r.status);})
@@ -1947,13 +1949,18 @@ if (window.__STATIC_MODE__) {
     if (_el('snap-clear-btn'))       _el('snap-clear-btn').title             = '最新に戻す';
     const borderUrl = window.__STATIC_BORDER_URL__ || './border.html';
     if (_el('border-header-link'))   _el('border-header-link').href          = borderUrl;
-    // 静的モード: 「団ランキング」は同一リポジトリ内 ./guild.html（未同梱の場合は非表示）
+    // 静的モード: 「団ランキング」リンク
+    //  - 自イベントが団データ取得済 → ./guild（同一リポ内）
+    //  - 自イベントが団データなし → 最新団イベントの URL（外部）
+    //  - どちらもなければ非表示
     const guildLink = _el('guild-header-link');
     if (guildLink) {
-      if (window.__STATIC_HAS_GUILD__ === false) {
-        guildLink.style.display = 'none';
+      if (window.__STATIC_HAS_GUILD__) {
+        guildLink.href = './guild';
+      } else if (window.__STATIC_GUILD_LATEST_URL__) {
+        guildLink.href = window.__STATIC_GUILD_LATEST_URL__;
       } else {
-        guildLink.href = './guild.html';
+        guildLink.style.display = 'none';
       }
     }
     if (_el('live-header-link') && window.__STATIC_LIVE_URL__) {
