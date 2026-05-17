@@ -1959,8 +1959,9 @@ if (window.__STATIC_MODE__) {
     if (_el('snap-day-auto-label'))  _el('snap-day-auto-label').textContent  = '-- 全日 --';
     if (_el('snap-time-auto-label')) _el('snap-time-auto-label').textContent = '-- 最新 --';
     if (_el('snap-clear-btn'))       _el('snap-clear-btn').title             = '最新に戻す';
-    const borderUrl = window.__STATIC_BORDER_URL__ || './border.html';
-    if (_el('border-header-link'))   _el('border-header-link').href          = borderUrl;
+    if (_el('border-header-link') && window.__STATIC_BORDER_URL__) {
+      _el('border-header-link').href = window.__STATIC_BORDER_URL__;
+    }
     // 静的モード: 「団ランキング」リンク → 常に最新団イベントへ
     const guildLink = _el('guild-header-link');
     if (guildLink) {
