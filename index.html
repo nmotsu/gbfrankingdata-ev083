@@ -1993,6 +1993,17 @@ async function loadEvents() {
         fresh.forEach(e => { if (e.url) window.__STATIC_EVENT_URLS__[e.id] = e.url; });
       }
     } catch {}
+    // meta.json からボーダー/団ランキング URL を動的上書き（古いエクスポートのリンク修正）
+    try {
+      const meta = await fetch(window.__STATIC_INDEX_URL__ + 'meta.json', { cache: 'no-cache' })
+        .then(r => r.ok ? r.json() : null);
+      if (meta) {
+        const bEl = document.getElementById('border-header-link');
+        const gEl = document.getElementById('guild-header-link');
+        if (bEl && meta.border_url)       bEl.href = meta.border_url;
+        if (gEl && meta.guild_latest_url) gEl.href = meta.guild_latest_url;
+      }
+    } catch {}
   }
 
   const sel = document.getElementById('event-select');
