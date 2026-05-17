@@ -1961,15 +1961,10 @@ if (window.__STATIC_MODE__) {
     if (_el('snap-clear-btn'))       _el('snap-clear-btn').title             = '最新に戻す';
     const borderUrl = window.__STATIC_BORDER_URL__ || './border.html';
     if (_el('border-header-link'))   _el('border-header-link').href          = borderUrl;
-    // 静的モード: 「団ランキング」リンク
-    //  - 自イベントが団データ取得済 → ./guild（同一リポ内）
-    //  - 自イベントが団データなし → 最新団イベントの URL（外部）
-    //  - どちらもなければ非表示
+    // 静的モード: 「団ランキング」リンク → 常に最新団イベントへ
     const guildLink = _el('guild-header-link');
     if (guildLink) {
-      if (window.__STATIC_HAS_GUILD__) {
-        guildLink.href = './guild';
-      } else if (window.__STATIC_GUILD_LATEST_URL__) {
+      if (window.__STATIC_GUILD_LATEST_URL__) {
         guildLink.href = window.__STATIC_GUILD_LATEST_URL__;
       } else {
         guildLink.style.display = 'none';
