@@ -1139,6 +1139,28 @@ async function apiFetch(url) {
   if (data != null) _apiCache.set(url, { data, ts: Date.now() });
   return data;
 }
+// 静的モード: 日別20分速ファイルを遅延ロード（snap-YYYY-MM-DD.json.gz）
+const _snapDayLoading = new Map();
+async function ensureSnapDayLoaded(gbfDay) {
+  if (!window.__STATIC_MODE__ || !gbfDay) return;
+  const daySnaps = snapGroups[gbfDay] || [];
+  if (daySnaps.length === 0) return;
+  const firstKey = `/api/ranking/20min?snapshot_id=${daySnaps[0].id}`;
+  if (window.__STATIC_CACHE__ && firstKey in window.__STATIC_CACHE__) return;
+  if (_snapDayLoading.has(gbfDay)) { await _snapDayLoading.get(gbfDay); return; }
+  const p = fetch(`./snap-${gbfDay}.json.gz`)
+    .then(r => r.ok ? r.arrayBuffer() : null)
+    .then(buf => {
+      if (!buf) return;
+      const dayCache = JSON.parse(pako.inflate(new Uint8Array(buf), { to: 'string' }));
+      window.__STATIC_CACHE__ = window.__STATIC_CACHE__ || {};
+      Object.assign(window.__STATIC_CACHE__, dayCache);
+    })
+    .catch(() => {})
+    .finally(() => _snapDayLoading.delete(gbfDay));
+  _snapDayLoading.set(gbfDay, p);
+  await p;
+}
 function apiCacheInvalidate(prefix) {
   for (const key of _apiCache.keys()) {
     if (!prefix || key.startsWith(prefix)) _apiCache.delete(key);
@@ -2304,7 +2326,11 @@ function renderTimeSelect(gbfDay, selectedSnapId) {
 function onSnapDayChange() {
   const gbfDay = document.getElementById('snap-day-select').value;
   renderTimeSelect(gbfDay, '');
-  loadCurrentSnap();
+  if (window.__STATIC_MODE__ && gbfDay) {
+    ensureSnapDayLoaded(gbfDay).then(() => loadCurrentSnap());
+  } else {
+    loadCurrentSnap();
+  }
 }
 
 function onSnapTimeChange() {
@@ -2316,6 +2342,7 @@ async function loadCurrentSnap() {
   const gbfDay = document.getElementById('snap-day-select')?.value || '';
   const snapId = document.getElementById('snap-time-select')?.value || '';
   showLoading();
+  if (gbfDay) await ensureSnapDayLoaded(gbfDay);
   let data = null;
   if (snapId) {
     data = await apiFetch(`/api/ranking/20min?snapshot_id=${snapId}`);
@@ -2385,7 +2412,8 @@ function syncSnapshotSelection(globalIdx) {
   document.getElementById('snap-day-select').value = gbfDay;
   renderTimeSelect(gbfDay, snap.id);
   showLoading();
-  apiFetch(`/api/ranking/20min?snapshot_id=${snap.id}`)
+  ensureSnapDayLoaded(gbfDay)
+    .then(() => apiFetch(`/api/ranking/20min?snapshot_id=${snap.id}`))
     .then(data => renderRanking(data))
     .catch(() => renderRanking(null));
 }
@@ -2468,6 +2496,7 @@ async function reload() {
   if (currentTab === '20min') {
     const gbfDay = document.getElementById('snap-day-select')?.value || '';
     const snapId = document.getElementById('snap-time-select')?.value || '';
+    if (gbfDay) await ensureSnapDayLoaded(gbfDay);
     if (snapId) {
       data = await apiFetch(`/api/ranking/20min?snapshot_id=${snapId}`);
     } else if (gbfDay) {
