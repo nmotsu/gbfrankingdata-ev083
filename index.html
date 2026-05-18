@@ -2494,28 +2494,31 @@ async function reload() {
   if (!currentEventId) { showNoData('イベントを選択してください'); return; }
   showLoading();
   let data = null;
-
-  if (currentTab === '20min') {
-    const gbfDay = document.getElementById('snap-day-select')?.value || '';
-    const snapId = document.getElementById('snap-time-select')?.value || '';
-    if (gbfDay) await ensureSnapDayLoaded(gbfDay);
-    if (snapId) {
-      data = await apiFetch(`/api/ranking/20min?snapshot_id=${snapId}`);
-    } else if (gbfDay) {
-      const daySnaps = snapGroups[gbfDay] || [];
-      if (daySnaps.length > 0) {
-        data = await apiFetch(`/api/ranking/20min?snapshot_id=${daySnaps[0].id}`);
+  try {
+    if (currentTab === '20min') {
+      const gbfDay = document.getElementById('snap-day-select')?.value || '';
+      const snapId = document.getElementById('snap-time-select')?.value || '';
+      if (gbfDay) await ensureSnapDayLoaded(gbfDay);
+      if (snapId) {
+        data = await apiFetch(`/api/ranking/20min?snapshot_id=${snapId}`);
+      } else if (gbfDay) {
+        const daySnaps = snapGroups[gbfDay] || [];
+        if (daySnaps.length > 0) {
+          data = await apiFetch(`/api/ranking/20min?snapshot_id=${daySnaps[0].id}`);
+        }
+      } else {
+        data = await apiFetch(`/api/ranking/latest?event_id=${currentEventId}`);
       }
     } else {
-      data = await apiFetch(`/api/ranking/latest?event_id=${currentEventId}`);
+      const ep = { morning: 'morning', daily: 'daily', overnight: 'overnight' }[currentTab];
+      if (ep) {
+        const url = `/api/ranking/${ep}?event_id=${currentEventId}${currentDate ? `&date=${currentDate}` : ''}`;
+        data = await apiFetch(url);
+      }
     }
-  } else {
-    const ep = { morning: 'morning', daily: 'daily', overnight: 'overnight' }[currentTab];
-    if (!ep) return;
-    const url = `/api/ranking/${ep}?event_id=${currentEventId}${currentDate ? `&date=${currentDate}` : ''}`;
-    data = await apiFetch(url);
+  } catch (err) {
+    console.error('[reload]', err);
   }
-
   renderRanking(data);
 }
 
