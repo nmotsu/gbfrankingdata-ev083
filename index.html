@@ -16,9 +16,260 @@
 <meta name="twitter:description" content="グランブルーファンタジー古戦場のリアルタイムランキングデータを記録・公開する非公式ファンサイト。">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"GBF古戦場ランキング","url":"https://gbfranking.com/","description":"グランブルーファンタジー古戦場のリアルタイムランキングデータを記録・公開する非公式ファンサイト","applicationCategory":"Sports","inLanguage":"ja","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}}</script>
 <link rel="icon" href="./favicon-rich.png" type="image/png"><link rel="apple-touch-icon" href="./favicon-rich.png">
-<link rel="stylesheet" href="/css/layout.css">
-<link rel="stylesheet" href="/css/sidebar.css">
-<link rel="stylesheet" href="/css/tiers.css">
+<style>
+/* layout.css — Tailwind CDN 代替ユーティリティ (dashboard/border/guild 実使用クラスのみ) */
+
+/* --- Display --- */
+.flex        { display: flex; }
+.flex-col    { flex-direction: column; }
+.flex-1      { flex: 1 1 0%; }
+.flex-wrap   { flex-wrap: wrap; }
+.flex-shrink-0 { flex-shrink: 0; }
+.items-center   { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center  { justify-content: center; }
+
+/* --- Gap / Spacing --- */
+.gap-1  { gap: 4px; }
+.gap-2  { gap: 8px; }
+.gap-4  { gap: 16px; }
+.ml-1   { margin-left: 4px; }
+.ml-auto { margin-left: auto; }
+.mt-1   { margin-top: 4px; }
+.mt-2   { margin-top: 8px; }
+.mb-1   { margin-bottom: 4px; }
+
+/* --- Sizing --- */
+.w-full  { width: 100%; }
+.min-w-0 { min-width: 0; }
+
+/* --- Overflow --- */
+.overflow-hidden { overflow: hidden; }
+.overflow-auto   { overflow: auto; }
+
+/* --- Position --- */
+.relative { position: relative; }
+.sticky   { position: sticky; }
+
+/* --- Text size --- */
+.text-xs  { font-size: 0.75rem; line-height: 1rem; }
+.text-sm  { font-size: 0.875rem; line-height: 1.25rem; }
+
+/* --- Text color (dark theme向け: Tailwind互換近似値) --- */
+.text-white    { color: #ffffff; }
+.text-gray-400 { color: #9ca3af; }
+.text-gray-500 { color: #6b7280; }
+.text-gray-600 { color: #4b5563; }
+.text-blue-300 { color: #93c5fd; }
+.text-blue-400 { color: #60a5fa; }
+.text-red-400  { color: #f87171; }
+
+/* --- Hover text color --- */
+.hover\:text-white:hover    { color: #ffffff; }
+.hover\:text-blue-400:hover { color: #60a5fa; }
+.hover\:text-red-400:hover  { color: #f87171; }
+
+/* --- Font --- */
+.font-mono { font-family: 'Consolas', 'Menlo', 'Monaco', monospace; }
+.font-bold { font-weight: 700; }
+
+/* --- Truncate --- */
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+</style>
+<style>
+/* sidebar.css — サイドバー折りたたみ/展開デザイン */
+
+/* === 変数 === */
+:root {
+  --sidebar-expanded: 218px;
+  --sidebar-collapsed: 48px;
+  --sidebar-ease: cubic-bezier(0.2, 0, 0, 1);
+  --sidebar-dur: 180ms;
+}
+
+/* === PC サイドバー全体 (既存CSSを上書き) === */
+@media (min-width: 1024px) {
+  #side-panel {
+    width: var(--sidebar-expanded);
+    flex-shrink: 0;
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0 4px 8px;
+    transition: width var(--sidebar-dur) var(--sidebar-ease);
+    position: sticky;
+    top: 4px;
+    max-height: calc(100vh - 8px);
+    overflow: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  #side-panel::-webkit-scrollbar { display: none; }
+
+  /* === 折りたたみ状態 (48px) === */
+  #side-panel.collapsed {
+    width: var(--sidebar-collapsed);
+    padding: 4px 0;
+    overflow: hidden;
+  }
+
+  /* カードを丸ごと非表示 → 折りたたみアイコン表示 */
+  #side-panel.collapsed .side-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 4px;
+    border-radius: var(--md-shape-sm);
+    overflow: hidden;
+    cursor: default;
+  }
+
+  /* カード内コンテンツはすべて非表示 */
+  #side-panel.collapsed .side-card-title,
+  #side-panel.collapsed .side-card-value,
+  #side-panel.collapsed .side-card-sub,
+  #side-panel.collapsed #side-watch-list,
+  #side-panel.collapsed #side-elem-wrap { display: none; }
+
+  /* 折りたたみ時アイコン表示 */
+  #side-panel.collapsed .side-card::before {
+    font-size: 16px;
+    line-height: 1;
+    color: var(--md-on-surface-variant);
+    opacity: 0.7;
+  }
+  #side-panel.collapsed #side-event-card::before { content: '📅'; }
+  #side-panel.collapsed #side-top-card::before   { content: '🏆'; }
+  #side-panel.collapsed #side-watch-card::before  { content: '★'; color: var(--md-warning); opacity: 1; font-style: normal; }
+
+  /* ホバーで一時展開 */
+  #side-panel.collapsed:hover {
+    width: var(--sidebar-expanded);
+    padding: 4px 0 4px 8px;
+    z-index: 50;
+    box-shadow: -4px 0 16px rgba(0,0,0,0.4);
+  }
+  #side-panel.collapsed:hover .side-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    min-height: unset;
+  }
+  #side-panel.collapsed:hover .side-card::before { display: none; }
+  #side-panel.collapsed:hover .side-card-title,
+  #side-panel.collapsed:hover .side-card-value,
+  #side-panel.collapsed:hover .side-card-sub,
+  #side-panel.collapsed:hover #side-watch-list,
+  #side-panel.collapsed:hover #side-elem-wrap { display: revert; }
+
+  /* 折りたたみトグルボタン */
+  #side-collapse-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    width: 100%;
+    height: 28px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--md-outline-variant);
+    border-radius: 0;
+    cursor: pointer;
+    padding: 0 10px;
+    color: var(--md-on-surface-variant);
+    font-size: 11px;
+    line-height: 1;
+    transition: color var(--sidebar-dur) var(--sidebar-ease),
+                background var(--sidebar-dur) var(--sidebar-ease);
+    flex-shrink: 0;
+  }
+  #side-collapse-btn:hover {
+    color: var(--md-on-surface);
+    background: rgba(255,255,255,0.05);
+  }
+  #side-panel.collapsed #side-collapse-btn {
+    justify-content: center;
+    padding: 0;
+  }
+  #side-panel.collapsed:hover #side-collapse-btn {
+    justify-content: flex-end;
+    padding: 0 10px;
+  }
+}
+
+</style>
+<style>
+/* tiers.css — ランキング順位帯カラーバンド & テーブル密度 */
+
+/* === 順位帯カラー変数 === */
+:root {
+  --tier-top10-bg:    color-mix(in srgb, #FFD700 10%, var(--md-surface));
+  --tier-top10-acc:   #FFD700;
+  --tier-top100-bg:   color-mix(in srgb, #C0C0C0 9%, var(--md-surface));
+  --tier-top100-acc:  #C0C0C0;
+  --tier-top500-bg:   color-mix(in srgb, #CD7F32 9%, var(--md-surface));
+  --tier-top500-acc:  #CD7F32;
+  --tier-top1000-bg:  color-mix(in srgb, #4FC3F7 7%, var(--md-surface));
+  --tier-top1000-acc: #4FC3F7;
+  --tier-top2500-bg:  color-mix(in srgb, #81C784 6%, var(--md-surface));
+  --tier-top2500-acc: #81C784;
+}
+
+/* 順位帯背景・アクセントは無効（以前の仕様: 1-3位メダル色 + 交互ストライプ） */
+
+/* === 仮想スクロール用コンテナ (JS で height を動的設定) === */
+#rank-table-wrap {
+  overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* min-height はJSで上書き。フォールバック値 */
+  min-height: 200px;
+}
+/* thead sticky はコンテナ内スクロールに対応 */
+#rank-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  will-change: transform;
+}
+
+/* === テーブル行 コンパクト密度 === */
+#rank-table td {
+  padding: 5px 10px;
+  font-size: 0.8125rem;
+}
+#rank-table th {
+  padding: 6px 10px;
+}
+#rank-table tr.rank-row {
+  height: 34px;
+}
+
+/* Honor Diff インラインバー */
+.diff-bar-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+}
+.diff-bar {
+  display: inline-block;
+  height: 3px;
+  width: var(--bar-w, 0%);
+  max-width: 50px;
+  border-radius: 2px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.diff-bar.up   { background: #60a5fa; }
+.diff-bar.down { background: #f87171; }
+.diff-bar.flat { background: var(--md-outline); }
+
+</style>
 <script>
 // Chart.js 遅延読み込み（グラフ表示時に初めてロード）
 let _chartJsLoaded = false;
@@ -365,8 +616,179 @@ function ensureChartJs() {
   #save-modal select.save-select { font-size: 12px; padding: 4px 8px; background: var(--md-surface-container-high); border: 1px solid var(--md-outline); border-radius: 4px; color: var(--md-on-surface); }
 </style>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6139585433722718" crossorigin="anonymous"></script>
-<script src="/theme-manager.js?v=20260403"></script>
-<script src="/js/virtual-scroll.js"></script>
+<script>
+/**
+ * Element Color System for GBF Ranking App
+ * theme-manager.js - Manages element accent colors only (single dark theme)
+ */
+
+// === Element Accent Colors ===
+const ELEMENT_COLORS = {
+  '火': '#ef4444',
+  '水': '#3b82f6',
+  '土': '#d97706',
+  '風': '#22c55e',
+  '光': '#eab308',
+  '闇': '#7c3aed'
+};
+
+/**
+ * Extract element character from event name
+ */
+function getEventElement(eventName) {
+  if (!eventName) return null;
+  for (const elem of Object.keys(ELEMENT_COLORS)) {
+    if (eventName.includes(elem)) return elem;
+  }
+  return null;
+}
+
+/**
+ * Apply element accent color based on event name
+ */
+function applyElementTheme(eventName) {
+  const element = getEventElement(eventName);
+  const color = (element && ELEMENT_COLORS[element]) ? ELEMENT_COLORS[element] : '#3b82f6';
+  document.documentElement.style.setProperty('--elem-color', color);
+  document.documentElement.style.setProperty('--elem-color-light', color + '99');
+}
+
+/**
+ * Open help/howto modal — works for both dashboard (#help-modal) and border (#howto-modal)
+ */
+function openHowto() {
+  const modal = document.getElementById('howto-modal') || document.getElementById('help-modal');
+  if (!modal) return;
+  if (modal.classList.contains('modal-backdrop')) {
+    modal.classList.add('open');
+  } else {
+    modal.style.display = 'flex';
+  }
+}
+
+/* ─── Init ───────────────────────────────────── */
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Clear any stored background theme (single theme only)
+  localStorage.removeItem('gbf_bg_theme');
+});
+
+</script>
+<script>
+/**
+ * VirtualScroll — センチネル行方式テーブル仮想スクロール
+ *
+ * 使い方:
+ *   const vs = new VirtualScroll({
+ *     container: document.getElementById('rank-table-wrap'),
+ *     tbody: document.getElementById('ranking-body'),
+ *     colCount: 7,            // colspan for pad rows
+ *     rowHeight: 34,          // CSS と合わせる (tiers.css: tr { height: 34px })
+ *     overscan: 6,            // 上下に余分に描画する行数
+ *     rowFactory: (item, idx) => '<tr>...</tr>',
+ *   });
+ *   vs.setData(myArray);      // データをセットして描画
+ *   vs.refresh();             // colCount 変更時など強制再描画
+ *   vs.destroy();             // イベント解除
+ */
+class VirtualScroll {
+  constructor({ container, tbody, colCount, rowHeight, overscan, rowFactory }) {
+    this._container  = container;
+    this._tbody      = tbody;
+    this._colCount   = colCount;
+    this._rowHeight  = rowHeight || 34;
+    this._overscan   = overscan  || 6;
+    this._rowFactory = rowFactory;
+    this._data       = [];
+    this._raf        = null;
+
+    // センチネル行（上下のパディング維持用）
+    this._padTop = this._makePad();
+    this._padBot = this._makePad();
+
+    this._onScroll = () => {
+      if (this._raf) return;
+      this._raf = requestAnimationFrame(() => {
+        this._raf = null;
+        this._render();
+      });
+    };
+    container.addEventListener('scroll', this._onScroll, { passive: true });
+  }
+
+  _makePad() {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = this._colCount;
+    td.style.cssText = 'height:0;padding:0;border:none;';
+    tr.appendChild(td);
+    return tr;
+  }
+
+  _updateColSpan() {
+    this._padTop.firstChild.colSpan = this._colCount;
+    this._padBot.firstChild.colSpan = this._colCount;
+  }
+
+  _render() {
+    const { _container: c, _rowHeight: rh, _overscan: ov, _data: data } = this;
+    const total    = data.length;
+    const scrollTop = c.scrollTop;
+    const viewH    = c.clientHeight;
+
+    const rawStart = Math.floor(scrollTop / rh) - ov;
+    const rawEnd   = Math.ceil((scrollTop + viewH) / rh) + ov;
+    const start    = Math.max(0, rawStart);
+    const end      = Math.min(total, rawEnd);
+
+    const padTopH = start * rh;
+    const padBotH = Math.max(0, (total - end) * rh);
+
+    this._padTop.firstChild.style.height = padTopH + 'px';
+    this._padBot.firstChild.style.height = padBotH + 'px';
+
+    const frag = document.createDocumentFragment();
+    frag.appendChild(this._padTop);
+    for (let i = start; i < end; i++) {
+      const row = this._rowFactory(data[i], i);
+      if (typeof row === 'string') {
+        const tmp = document.createElement('template');
+        tmp.innerHTML = row;
+        frag.appendChild(tmp.content);
+      } else {
+        frag.appendChild(row);
+      }
+    }
+    frag.appendChild(this._padBot);
+
+    this._tbody.replaceChildren(frag);
+  }
+
+  /** データをセットして先頭にスクロール後に描画 */
+  setData(data, keepScroll = false) {
+    this._data = data;
+    if (!keepScroll) this._container.scrollTop = 0;
+    this._render();
+  }
+
+  /** colCount 変更時などに呼ぶ */
+  setColCount(n) {
+    this._colCount = n;
+    this._updateColSpan();
+  }
+
+  /** 強制再描画（同じデータでレイアウトが変わった場合） */
+  refresh() {
+    this._render();
+  }
+
+  destroy() {
+    this._container.removeEventListener('scroll', this._onScroll);
+    if (this._raf) cancelAnimationFrame(this._raf);
+  }
+}
+
+</script>
 </head>
 <body>
 
@@ -2519,7 +2941,10 @@ async function reload() {
   } catch (err) {
     console.error('[reload]', err);
   }
-  renderRanking(data);
+  try { renderRanking(data); } catch (e) {
+    console.error('[renderRanking]', e);
+    showNoData('表示エラー: ' + (e.message || e));
+  }
 }
 
 const TYPE_META = {
@@ -2649,6 +3074,11 @@ function renderRanking(data) {
   }
 
   // VirtualScroll: 初回作成 or rowFactory・colCount 更新
+  if (typeof VirtualScroll === 'undefined') {
+    tbody.innerHTML = sorted.slice(0, 200).map((p, i) => buildRow(p, i)).join('');
+    updateSidePanel(data);
+    return;
+  }
   const wrap = document.getElementById('rank-table-wrap');
   if (!_vsRanking) {
     fitTableHeight();
@@ -3512,7 +3942,10 @@ function updateTableHeight() {
 const fitTableHeight = updateTableHeight;
 window.addEventListener('resize', updateTableHeight);
 
-init().then(() => updateTableHeight());
+init().catch(err => {
+  console.error('[init] FATAL:', err);
+  try { showNoData('初期化エラー: ' + (err.message || err)); } catch {}
+}).then(() => updateTableHeight());
 </script>
 <script>
 
