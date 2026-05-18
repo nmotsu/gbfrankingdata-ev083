@@ -1130,6 +1130,8 @@ function getStaticPageEventId() {
 async function apiFetch(url) {
   if (window.__STATIC_MODE__) {
     if (window.__STATIC_CACHE__ && url in window.__STATIC_CACHE__) return window.__STATIC_CACHE__[url];
+    if (window.__STATIC_CACHE_PROMISE__) { try { await window.__STATIC_CACHE_PROMISE__; } catch {} }
+    if (window.__STATIC_CACHE__ && url in window.__STATIC_CACHE__) return window.__STATIC_CACHE__[url];
     return null;
   }
   if (window.__STATIC_CACHE__ && url in window.__STATIC_CACHE__) return window.__STATIC_CACHE__[url];
