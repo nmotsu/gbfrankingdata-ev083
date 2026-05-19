@@ -3501,6 +3501,11 @@ async function loadGraphData() {
 
   const days = Object.keys(snapGroups || {}).sort().filter(d => d >= fromDay && d <= toDay);
   const dayCount = days.length;
+
+  if (window.__STATIC_MODE__) {
+    await Promise.all(days.map(d => ensureSnapDayLoaded(d)));
+  }
+
   let snaps = [];
   for (const day of days) snaps.push(...(snapGroups[day] || []));
   snaps.sort((a, b) => a.captured_at.localeCompare(b.captured_at));
