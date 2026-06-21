@@ -1486,10 +1486,10 @@ window.__STATIC_MODE__=true;
 window.__STATIC_EVENT_URLS__={"1":"https://ev078.gbfranking.com/","3":"https://ev080.gbfranking.com/","4":"https://ev079.gbfranking.com/","5":"https://ev081.gbfranking.com/","6":"https://ev082.gbfranking.com/","7":"https://ev000.gbfranking.com/","10":"https://ev083.gbfranking.com/"};
 window.__STATIC_INDEX_URL__='https://gbfranking.com/';
 window.__STATIC_BORDER_URL__='https://border.gbfranking.com/';
-window.__STATIC_LIVE_URL__='';
-window.__STATIC_HAS_GUILD__=false;
-window.__STATIC_GUILD_LATEST_URL__='https://ev082.gbfranking.com/guild';
-window.__STATIC_EVENT_GUILD_URLS__={"6":"https://ev082.gbfranking.com/guild"};
+window.__STATIC_LIVE_URL__='https://live.gbfranking.com';
+window.__STATIC_HAS_GUILD__=true;
+window.__STATIC_GUILD_LATEST_URL__='https://ev083.gbfranking.com/guild';
+window.__STATIC_EVENT_GUILD_URLS__={"6":"https://ev082.gbfranking.com/guild","10":"https://ev083.gbfranking.com/guild"};
 window.__STATIC_CACHE__=null;
 window.__STATIC_CACHE_PROMISE__=fetch('./data.json.gz')
   .then(function(r){return r.ok?r.arrayBuffer():Promise.reject('HTTP '+r.status);})
@@ -3010,7 +3010,7 @@ function renderRanking(data) {
   badgeEl.className   = `type-badge ${meta.cls}`;
   // タブのサブテキストを更新（日速のみ）
   const dailySubEl = document.getElementById('tab-daily-sub');
-  if (dailySubEl) dailySubEl.textContent = (data.type === '日速' && data.isLive) ? '7:00→最新' : '7:00→0:00';
+  if (dailySubEl) dailySubEl.textContent = data.isLive ? '7:00→最新' : '7:00→0:00';
 
   // 更新中バッジ: afterPlayerCount が 2000未満なら表示
   const updBadge = document.getElementById('updating-badge');
