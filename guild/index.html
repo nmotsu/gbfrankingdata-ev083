@@ -16,7 +16,7 @@ window.__STATIC_INDEX_URL__='https://gbfranking.com/';
 window.__STATIC_BORDER_URL__='https://border.gbfranking.com/';
 window.__STATIC_LIVE_URL__='';
 window.__STATIC_GUILD_LATEST_URL__='https://ev083.gbfranking.com/guild';
-window.__STATIC_EVENT_GUILD_URLS__={"6":"https://ev082.gbfranking.com/guild","10":"https://ev083.gbfranking.com/guild"};
+window.__STATIC_EVENT_GUILD_URLS__={"6":"https://ev082.gbfranking.com/guild","7":"https://ev000.gbfranking.com/guild","10":"https://ev083.gbfranking.com/guild"};
 window.__STATIC_RANKING_LATEST_URL__='https://ev083.gbfranking.com/';
 window.__STATIC_CACHE__=null;
 window.__STATIC_CACHE_PROMISE__=fetch('./../guild-data.json.gz')
@@ -73,6 +73,15 @@ window.__STATIC_CACHE_PROMISE__=fetch('./../guild-data.json.gz')
 .text-blue-300 { color: #93c5fd; }
 .text-blue-400 { color: #60a5fa; }
 .text-red-400  { color: #f87171; }
+
+/* --- ライトモードで読みづらい白系/淡灰をダーク寄りに上書き --- */
+html[data-theme="light"] .text-white    { color: #1a1d21; }
+html[data-theme="light"] .text-gray-400 { color: #5b6470; }
+html[data-theme="light"] .text-gray-500 { color: #6b7280; }
+html[data-theme="light"] .text-gray-600 { color: #4b5563; }
+html[data-theme="light"] .text-blue-300 { color: #2563eb; }
+html[data-theme="light"] .text-blue-400 { color: #1d4ed8; }
+html[data-theme="light"] .hover\:text-white:hover { color: #1a1d21; }
 
 /* --- Hover text color --- */
 .hover\:text-white:hover    { color: #ffffff; }
@@ -316,7 +325,23 @@ function ensureChartJs() {
     --md-ease:cubic-bezier(0.2,0,0,1); --md-duration-short:150ms; --md-duration-medium:300ms;
     --md-elevation-1:0 1px 3px rgba(0,0,0,0.3); --md-elevation-2:0 2px 6px rgba(0,0,0,0.3);
     --md-elevation-3:0 4px 12px rgba(0,0,0,0.3);
+    --row-top1-bg:#2a2200; --row-top2-bg:#1e1e2e; --row-top3-bg:#261400;
+    --row-odd-bg:rgba(255,255,255,0.04); --row-hairline:rgba(255,255,255,0.05); --row-hover:rgba(255,255,255,0.05);
   }
+  html[data-theme="light"]{
+    --theme-bg:#f4f5f7; --theme-surface:#ffffff; --theme-surface-container:#f1f2f4;
+    --theme-surface-container-high:#e7e9ec; --theme-outline:#cfd3da; --theme-outline-variant:#e2e5ea;
+    --theme-on-surface:#1a1d21; --theme-on-surface-variant:#586173;
+    --chart-grid-color:rgba(0,0,0,0.08);
+    --md-elevation-1:0 1px 3px rgba(0,0,0,0.10); --md-elevation-2:0 2px 6px rgba(0,0,0,0.10);
+    --md-elevation-3:0 4px 12px rgba(0,0,0,0.12);
+    --row-top1-bg:#fdf6cf; --row-top2-bg:#edf1f6; --row-top3-bg:#fce4e4;
+    --row-odd-bg:#eaf2fb; --row-hairline:#e3e6ea; --row-hover:rgba(26,115,232,0.10);
+  }
+  html[data-theme="light"] .type-daily{background:#dcf5e3;color:#15803d;}
+  html[data-theme="light"] .gn-clickable:not(.gn-pinned){color:#1a73e8 !important;text-decoration:underline;}
+  html[data-theme="light"] .score-bar-bg{opacity:0.30;}
+  html[data-theme="light"] .score-diff{color:var(--md-on-surface-variant) !important;font-weight:600;}
   html,body{min-height:100%;margin:0;padding:0;}
   body{background:var(--theme-bg);color:var(--theme-on-surface);font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;}
   .main-wrap{flex:1;display:flex;flex-direction:column;}
@@ -341,8 +366,8 @@ function ensureChartJs() {
   /* Table */
   table{width:100%;border-collapse:collapse;table-layout:fixed;}
   th{background:var(--md-surface);color:var(--md-on-surface-variant);font-size:0.6875rem;padding:8px 12px;letter-spacing:0.04em;text-transform:uppercase;font-weight:500;position:sticky;top:0;z-index:2;white-space:nowrap;overflow:hidden;}
-  td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.8125rem;vertical-align:middle;overflow:hidden;font-variant-numeric:tabular-nums;transition:background var(--md-duration-short) var(--md-ease);}
-  .rank-row:hover{background:rgba(255,255,255,0.05) !important;}
+  td{padding:8px 12px;border-bottom:1px solid var(--row-hairline);font-size:0.8125rem;vertical-align:middle;overflow:hidden;font-variant-numeric:tabular-nums;transition:background var(--md-duration-short) var(--md-ease);}
+  .rank-row:hover{background:var(--row-hover) !important;}
   .rank-row.top-1{border-left:4px solid var(--md-warning);box-shadow:inset 60px 0 20px -20px rgba(251,191,36,0.12);}
   .rank-row.top-2{border-left:4px solid #c0c0c0;box-shadow:inset 60px 0 20px -20px rgba(192,192,192,0.10);}
   .rank-row.top-3{border-left:4px solid #cd7c32;box-shadow:inset 60px 0 20px -20px rgba(205,124,50,0.10);}
@@ -414,9 +439,9 @@ function ensureChartJs() {
   .modal-table{border-collapse:collapse;font-size:0.75rem;table-layout:auto;width:100%;}
   .modal-table th{background:var(--md-surface);color:var(--md-on-surface-variant);padding:8px 12px;text-align:right;white-space:nowrap;position:sticky;top:0;z-index:1;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;}
   .modal-table th:first-child{text-align:left;}
-  .modal-table td{padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:right;vertical-align:middle;white-space:nowrap;transition:background var(--md-duration-short) var(--md-ease);}
+  .modal-table td{padding:6px 12px;border-bottom:1px solid var(--row-hairline);text-align:right;vertical-align:middle;white-space:nowrap;transition:background var(--md-duration-short) var(--md-ease);}
   .modal-table td:first-child{text-align:left;font-size:0.6875rem;color:var(--md-on-surface-variant);font-family:monospace;}
-  .modal-table tr:hover td{background:rgba(255,255,255,0.05);}
+  .modal-table tr:hover td{background:var(--row-hover);}
   /* Graph chart buttons */
   .gchart-type-btn{padding:6px 12px;font-size:0.75rem;border-radius:var(--md-shape-sm);border:1px solid var(--md-outline);background:var(--md-surface-container-high);color:var(--md-on-surface-variant);cursor:pointer;transition:all var(--md-duration-short) var(--md-ease);}
   .gchart-type-btn.active{background:#1e40af;color:#fff;border-color:#1e40af;box-shadow:var(--md-elevation-1);}
@@ -432,7 +457,7 @@ function ensureChartJs() {
   /* Ctrl toggle */
   #ctrl-toggle-bar{display:flex;justify-content:flex-end;align-items:center;padding:3px 6px 3px 8px;background:var(--md-surface-dim);border-bottom:1px solid var(--md-outline-variant);gap:6px;}
   #ctrl-toggle-btn{background:none;border:none;cursor:pointer;color:var(--md-on-surface-variant);font-size:11px;padding:3px 8px;border-radius:var(--md-shape-sm);display:flex;align-items:center;gap:4px;transition:all var(--md-duration-short) var(--md-ease);}
-  #ctrl-toggle-btn:hover{background:rgba(255,255,255,0.07);color:var(--md-on-surface);}
+  #ctrl-toggle-btn:hover{background:var(--row-hover);color:var(--md-on-surface);}
   #ctrl-toggle-arrow{display:inline-block;transition:transform 0.3s var(--md-ease);}
   #main-content.ctrl-collapsed #ctrl-toggle-arrow{transform:rotate(180deg);}
   #ctrl-collapsible{display:grid;grid-template-rows:1fr;transition:grid-template-rows 0.3s var(--md-ease);}
@@ -457,7 +482,7 @@ function ensureChartJs() {
   /* Side panel */
   #side-panel{display:none;}
   #side-collapse-btn{display:none;width:100%;height:28px;background:transparent;border:none;border-bottom:1px solid var(--md-outline-variant);border-radius:0;cursor:pointer;padding:0 10px;color:var(--md-on-surface-variant);font-size:11px;line-height:1;transition:all var(--md-duration-short) var(--md-ease);flex-shrink:0;align-items:center;justify-content:flex-end;gap:4px;}
-  #side-collapse-btn:hover{color:var(--md-on-surface);background:rgba(255,255,255,0.05);}
+  #side-collapse-btn:hover{color:var(--md-on-surface);background:var(--row-hover);}
   #side-panel.collapsed #side-collapse-btn{justify-content:center;padding:0;}
   @media(min-width:1024px){
     .main-wrap{flex-direction:row !important;align-items:flex-start;}
@@ -475,7 +500,7 @@ function ensureChartJs() {
   .side-elem-badge{display:inline-block;padding:2px 8px;border-radius:var(--md-shape-full);font-size:0.6875rem;font-weight:700;margin-top:4px;}
   /* Graph suggest */
   .graph-suggest-item{padding:6px 12px;cursor:pointer;font-size:0.8125rem;color:var(--md-on-surface);border-bottom:1px solid var(--md-outline-variant);}
-  .graph-suggest-item:hover{background:rgba(255,255,255,0.05);}
+  .graph-suggest-item:hover{background:var(--row-hover);}
   @media(max-width:599px){.tab-sub{display:none;}.tab-btn{padding:5px 2px;font-size:0.75rem;}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important;}}
 </style>
@@ -529,11 +554,48 @@ function openHowto() {
   }
 }
 
+/* ─── Color Mode (light / dark) ──────────────── */
+
+const COLOR_MODE_KEY = 'gbf_color_mode';
+
+function getColorMode() {
+  try {
+    const saved = localStorage.getItem(COLOR_MODE_KEY);
+    if (saved === 'light' || saved === 'dark') return saved;
+  } catch {}
+  return 'dark'; // 既定はダーク（既存挙動）
+}
+
+// 添付アイコン: ライト時は太陽（グレー）、ダーク時は月（ブルー）。背景に対して常に視認可能
+const SUN_SVG  = '<svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5"/><g stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4.6" y1="4.6" x2="6.4" y2="6.4"/><line x1="17.6" y1="17.6" x2="19.4" y2="19.4"/><line x1="4.6" y1="19.4" x2="6.4" y2="17.6"/><line x1="17.6" y1="6.4" x2="19.4" y2="4.6"/></g></svg>';
+const MOON_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#6366f1"/><path d="M20.5 13.2A8 8 0 1 1 10.8 3.5 6.3 6.3 0 0 0 20.5 13.2Z" fill="#fff"/></svg>';
+
+function applyColorMode(mode) {
+  const m = mode === 'light' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', m);
+  try { localStorage.setItem(COLOR_MODE_KEY, m); } catch {}
+  // トグルボタンのアイコンを更新（存在すれば）。現在のモードを表示
+  document.querySelectorAll('.color-mode-toggle').forEach(btn => {
+    btn.innerHTML = m === 'light' ? SUN_SVG : MOON_SVG;
+    btn.title = m === 'light' ? 'ダークモードに切替' : 'ライトモードに切替';
+  });
+}
+
+function toggleColorMode() {
+  const cur = document.documentElement.getAttribute('data-theme') || getColorMode();
+  applyColorMode(cur === 'light' ? 'dark' : 'light');
+}
+
+// FOUC回避のため即時適用（DOMContentLoaded を待たない）
+applyColorMode(getColorMode());
+
 /* ─── Init ───────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Clear any stored background theme (single theme only)
+  // Clear any stored background theme (legacy)
   localStorage.removeItem('gbf_bg_theme');
+  // 保存済みカラーモードを再適用（ボタンアイコン同期のため）
+  applyColorMode(getColorMode());
 });
 
 </script>
@@ -549,6 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </a>
     </h1>
     <div class="hdr-right">
+      <button class="hdr-btn color-mode-toggle" onclick="toggleColorMode()" aria-label="カラーモード切替" style="padding:4px 8px;line-height:0"></button>
       <a id="hdr-ranking-link" href="/" class="hdr-btn hdr-btn-blue">ランキング</a>
       <a id="hdr-border-link" href="/border" class="hdr-btn hdr-btn-blue">ボーダー</a>
       <button class="hdr-btn" onclick="openGuildHelpModal()">使い方</button>
@@ -1581,11 +1644,11 @@ function updateSortIndicators() {
   });
 }
 function rowBg(displayRank, displayIdx) {
-  if (displayRank === 1) return '#2a2200';
-  if (displayRank === 2) return '#1e1e2e';
-  if (displayRank === 3) return '#261400';
+  if (displayRank === 1) return 'var(--row-top1-bg)';
+  if (displayRank === 2) return 'var(--row-top2-bg)';
+  if (displayRank === 3) return 'var(--row-top3-bg)';
   if (displayIdx % 2 === 0) return 'transparent';
-  return 'rgba(255,255,255,0.04)';
+  return 'var(--row-odd-bg)';
 }
 
 function getTierClass(rank) {

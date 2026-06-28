@@ -64,6 +64,15 @@
 .text-blue-400 { color: #60a5fa; }
 .text-red-400  { color: #f87171; }
 
+/* --- ライトモードで読みづらい白系/淡灰をダーク寄りに上書き --- */
+html[data-theme="light"] .text-white    { color: #1a1d21; }
+html[data-theme="light"] .text-gray-400 { color: #5b6470; }
+html[data-theme="light"] .text-gray-500 { color: #6b7280; }
+html[data-theme="light"] .text-gray-600 { color: #4b5563; }
+html[data-theme="light"] .text-blue-300 { color: #2563eb; }
+html[data-theme="light"] .text-blue-400 { color: #1d4ed8; }
+html[data-theme="light"] .hover\:text-white:hover { color: #1a1d21; }
+
 /* --- Hover text color --- */
 .hover\:text-white:hover    { color: #ffffff; }
 .hover\:text-blue-400:hover { color: #60a5fa; }
@@ -331,7 +340,42 @@ function ensureChartJs() {
     --md-elevation-1: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
     --md-elevation-2: 0 2px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
     --md-elevation-3: 0 4px 12px rgba(0,0,0,0.3), 0 3px 6px rgba(0,0,0,0.2);
+    /* 行/オーバーレイ（テーマ追従） */
+    --row-top1-bg: #2a2200;
+    --row-top2-bg: #1e1e2e;
+    --row-top3-bg: #261400;
+    --row-odd-bg: rgba(255,255,255,0.04);
+    --row-hairline: rgba(255,255,255,0.05);
+    --row-hover: rgba(255,255,255,0.05);
   }
+  /* === ライトモード（data-theme="light" で base 変数を上書き、MD3トークンへ波及） === */
+  html[data-theme="light"] {
+    --theme-bg: #f4f5f7;
+    --theme-surface: #ffffff;
+    --theme-surface-container: #f1f2f4;
+    --theme-surface-container-high: #e7e9ec;
+    --theme-outline: #cfd3da;
+    --theme-outline-variant: #e2e5ea;
+    --theme-on-surface: #1a1d21;
+    --theme-on-surface-variant: #586173;
+    --chart-grid-color: rgba(0,0,0,0.08);
+    --md-elevation-1: 0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+    --md-elevation-2: 0 2px 6px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+    --md-elevation-3: 0 4px 12px rgba(0,0,0,0.12), 0 3px 6px rgba(0,0,0,0.08);
+    --row-top1-bg: #fdf6cf;
+    --row-top2-bg: #edf1f6;
+    --row-top3-bg: #fce4e4;
+    --row-odd-bg: #eaf2fb;
+    --row-hairline: #e3e6ea;
+    --row-hover: rgba(26,115,232,0.10);
+  }
+  html[data-theme="light"] .type-morning  { background:#fff3d6; color:#92600a; }
+  html[data-theme="light"] .type-daily    { background:#dcf5e3; color:#15803d; }
+  html[data-theme="light"] .type-overnight{ background:color-mix(in srgb,var(--elem-color) 14%, #fff); color:#1d4ed8; }
+  /* ライト: スプレッドシート風（GNは青リンク＋下線、増加量は周囲のセルに合わせて控えめに） */
+  html[data-theme="light"] .gn-clickable:not(.gn-pinned) { color:#1a73e8 !important; text-decoration:underline; }
+  html[data-theme="light"] .honor-bar-bg { opacity:0.30; }
+  html[data-theme="light"] .honor-diff { color:var(--md-on-surface-variant) !important; font-weight:600; }
   body { background: var(--theme-bg); color: var(--theme-on-surface); font-family: 'Segoe UI', sans-serif; }
   .header { background: var(--theme-surface); border-bottom: 2px solid var(--elem-color); padding: 12px 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.5); }
   .header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
@@ -377,8 +421,8 @@ function ensureChartJs() {
   .tab-btn:not(.active) { background: var(--md-surface-container-high); color: var(--md-on-surface-variant); }
   .tab-btn:not(.active):hover { background: var(--md-surface-bright); color: var(--md-on-surface); }
   .tab-sub { font-size: 0.5625rem; font-weight:400; opacity:0.65; }
-  tr.rank-row:nth-child(even) { background: rgba(255,255,255,0.018); }
-  .rank-row:hover { background: rgba(255,255,255,0.05) !important; }
+  tr.rank-row:nth-child(even) { background: var(--row-odd-bg); }
+  .rank-row:hover { background: var(--row-hover) !important; }
   .rank-row.top-1 { border-left: 4px solid var(--md-warning); box-shadow: inset 60px 0 20px -20px rgba(251,191,36,0.12); }
   .rank-row.top-2 { border-left: 4px solid #c0c0c0; box-shadow: inset 60px 0 20px -20px rgba(192,192,192,0.10); }
   .rank-row.top-3 { border-left: 4px solid #cd7c32; box-shadow: inset 60px 0 20px -20px rgba(205,124,50,0.10); }
@@ -387,7 +431,7 @@ function ensureChartJs() {
   @keyframes md-fade-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   th { background: var(--md-surface); color: var(--md-on-surface-variant); font-size: 0.6875rem; padding: 8px 12px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; overflow: hidden; position: sticky; top: 0; z-index: 2; user-select: none; white-space: nowrap; }
-  td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.8125rem; vertical-align: middle; overflow: hidden; font-variant-numeric: tabular-nums; transition: background var(--md-duration-short) var(--md-ease); }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--row-hairline); font-size: 0.8125rem; vertical-align: middle; overflow: hidden; font-variant-numeric: tabular-nums; transition: background var(--md-duration-short) var(--md-ease); }
   .col-gn { text-overflow: ellipsis; white-space: nowrap; }
   .modal-body { overflow-x: auto; -webkit-overflow-scrolling: touch; min-width: 0; padding: 12px 8px; }
   .modal-table { min-width: 760px; }
@@ -482,9 +526,9 @@ function ensureChartJs() {
   .modal-table td:nth-child(6) { min-width: 115px; }
   .modal-table th:nth-child(7),
   .modal-table td:nth-child(7) { min-width: 140px; }
-  .modal-table td { padding: 6px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: right; vertical-align: middle; white-space: nowrap; transition: background var(--md-duration-short) var(--md-ease); }
+  .modal-table td { padding: 6px 12px; border-bottom: 1px solid var(--row-hairline); text-align: right; vertical-align: middle; white-space: nowrap; transition: background var(--md-duration-short) var(--md-ease); }
   .modal-table td:first-child { text-align: left; font-size: 0.6875rem; color: var(--md-on-surface-variant); font-family: monospace; white-space: nowrap; }
-  .modal-table tr:hover td { background: rgba(255,255,255,0.05); }
+  .modal-table tr:hover td { background: var(--row-hover); }
   /* GN クリッカブル */
   .gn-clickable { cursor: pointer; color: var(--md-on-primary-container); }
   .gn-clickable:hover { text-decoration: underline; }
@@ -541,7 +585,7 @@ function ensureChartJs() {
   /* コントロール折りたたみ */
   #ctrl-toggle-bar { display:flex; justify-content:flex-end; align-items:center; padding:3px 6px 3px 8px; background:var(--md-surface-dim); border-bottom:1px solid var(--md-outline-variant); gap:6px; }
   #ctrl-toggle-btn { background:none; border:none; cursor:pointer; color:var(--md-on-surface-variant); font-size:11px; padding:3px 8px; border-radius:var(--md-shape-sm); display:flex; align-items:center; gap:4px; transition:all var(--md-duration-short) var(--md-ease); }
-  #ctrl-toggle-btn:hover { background:rgba(255,255,255,0.07); color:var(--md-on-surface); }
+  #ctrl-toggle-btn:hover { background:var(--row-hover); color:var(--md-on-surface); }
   #ctrl-toggle-arrow { display:inline-block; transition:transform 0.3s var(--md-ease); }
   #main-content.ctrl-collapsed #ctrl-toggle-arrow { transform:rotate(180deg); }
   /* アコーディオン: grid-template-rows で高さをスムーズに変化させる */
@@ -568,7 +612,7 @@ function ensureChartJs() {
   .graph-sub-btn { padding:4px 12px; border-radius:var(--md-shape-sm); font-size:0.6875rem; cursor:pointer; background:var(--md-surface-container-high); border:1px solid var(--md-outline); color:var(--md-on-surface-variant); white-space:nowrap; transition:all var(--md-duration-short) var(--md-ease); }
   .graph-sub-btn:hover { border-color:var(--md-primary); color:var(--md-primary); }
   .graph-suggest-item { padding:8px 14px; cursor:pointer; font-size:0.75rem; color:var(--md-on-surface); border-bottom:1px solid var(--md-outline-variant); transition:background var(--md-duration-short) var(--md-ease); }
-  .graph-suggest-item:hover { background:rgba(255,255,255,0.05); }
+  .graph-suggest-item:hover { background:var(--row-hover); }
   .graph-search-wrap { position:relative; display:inline-block; }
   /* ===== PC サイドバー ===== */
   #main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -585,7 +629,7 @@ function ensureChartJs() {
     #side-collapse-btn { display: none !important; }
   }
   #side-collapse-btn { display: none; width: 100%; height: 28px; background: transparent; border: none; border-bottom: 1px solid var(--md-outline-variant); border-radius: 0; cursor: pointer; padding: 0 10px; color: var(--md-on-surface-variant); font-size: 11px; line-height: 1; transition: all var(--md-duration-short) var(--md-ease); flex-shrink: 0; align-items: center; justify-content: flex-end; gap: 4px; }
-  #side-collapse-btn:hover { color: var(--md-on-surface); background: rgba(255,255,255,0.05); }
+  #side-collapse-btn:hover { color: var(--md-on-surface); background: var(--row-hover); }
   #side-panel.collapsed #side-collapse-btn { justify-content: center; padding: 0; }
   .side-card { background: var(--md-surface-container); border: 1px solid var(--md-outline-variant); border-radius: var(--md-shape-md); padding: 12px; transition: border-color var(--md-duration-short) var(--md-ease); }
   .side-card:hover { border-color: var(--md-outline); }
@@ -666,11 +710,48 @@ function openHowto() {
   }
 }
 
+/* ─── Color Mode (light / dark) ──────────────── */
+
+const COLOR_MODE_KEY = 'gbf_color_mode';
+
+function getColorMode() {
+  try {
+    const saved = localStorage.getItem(COLOR_MODE_KEY);
+    if (saved === 'light' || saved === 'dark') return saved;
+  } catch {}
+  return 'dark'; // 既定はダーク（既存挙動）
+}
+
+// 添付アイコン: ライト時は太陽（グレー）、ダーク時は月（ブルー）。背景に対して常に視認可能
+const SUN_SVG  = '<svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5"/><g stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4.6" y1="4.6" x2="6.4" y2="6.4"/><line x1="17.6" y1="17.6" x2="19.4" y2="19.4"/><line x1="4.6" y1="19.4" x2="6.4" y2="17.6"/><line x1="17.6" y1="6.4" x2="19.4" y2="4.6"/></g></svg>';
+const MOON_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#6366f1"/><path d="M20.5 13.2A8 8 0 1 1 10.8 3.5 6.3 6.3 0 0 0 20.5 13.2Z" fill="#fff"/></svg>';
+
+function applyColorMode(mode) {
+  const m = mode === 'light' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', m);
+  try { localStorage.setItem(COLOR_MODE_KEY, m); } catch {}
+  // トグルボタンのアイコンを更新（存在すれば）。現在のモードを表示
+  document.querySelectorAll('.color-mode-toggle').forEach(btn => {
+    btn.innerHTML = m === 'light' ? SUN_SVG : MOON_SVG;
+    btn.title = m === 'light' ? 'ダークモードに切替' : 'ライトモードに切替';
+  });
+}
+
+function toggleColorMode() {
+  const cur = document.documentElement.getAttribute('data-theme') || getColorMode();
+  applyColorMode(cur === 'light' ? 'dark' : 'light');
+}
+
+// FOUC回避のため即時適用（DOMContentLoaded を待たない）
+applyColorMode(getColorMode());
+
 /* ─── Init ───────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Clear any stored background theme (single theme only)
+  // Clear any stored background theme (legacy)
   localStorage.removeItem('gbf_bg_theme');
+  // 保存済みカラーモードを再適用（ボタンアイコン同期のため）
+  applyColorMode(getColorMode());
 });
 
 </script>
@@ -805,6 +886,7 @@ class VirtualScroll {
     <span id="demo-badge" class="demo-badge" style="display:none">DEMO</span>
     <div class="hdr-right">
       <span id="viewer-badge" class="viewer-badge" style="display:none"></span>
+      <button class="hdr-btn color-mode-toggle" onclick="toggleColorMode()" aria-label="カラーモード切替" style="padding:4px 8px;line-height:0"></button>
 <a href="/border" class="hdr-btn hdr-btn-blue" id="border-header-link">ボーダー</a>
       <a href="/guild" class="hdr-btn hdr-btn-blue" id="guild-header-link">団ランキング</a>
       <a id="live-header-link" class="hdr-btn hdr-btn-live" href="#" style="display:none" target="_blank" rel="noopener">LIVE</a>
@@ -832,7 +914,7 @@ class VirtualScroll {
     <!-- ① タブ: 4列1行（全幅） -->
     <div id="tab-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
       <button class="tab-btn active" id="tab-20min" onclick="switchTab('20min')">20分速<span class="tab-sub">直前→最新</span></button>
-      <button class="tab-btn" id="tab-morning" onclick="switchTab('morning')">朝活<span class="tab-sub">7:00→8:00</span></button>
+      <button class="tab-btn" id="tab-morning" onclick="switchTab('morning')">朝活<span class="tab-sub" id="tab-morning-sub">7:00→8:00</span></button>
       <button class="tab-btn" id="tab-daily" onclick="switchTab('daily')">日速<span class="tab-sub" id="tab-daily-sub">7:00→最新</span></button>
       <button class="tab-btn" id="tab-overnight" onclick="switchTab('overnight')">残業<span class="tab-sub">0:00→7:00</span></button>
     </div>
@@ -1039,6 +1121,7 @@ class VirtualScroll {
       <!-- プレイヤー管理：操作ボタン行 -->
       <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:4px">
         <button class="graph-sub-btn" onclick="addBattlePlayersToGraph()">バトルから追加</button>
+        <button class="graph-sub-btn" onclick="addWatchedPlayersToGraph()">注目から追加</button>
         <div class="graph-search-wrap">
           <input id="graph-player-search" type="text" placeholder="プレイヤー名..." style="font-size:12px;width:130px"
                  oninput="onGraphPlayerSearch()" onblur="setTimeout(()=>hideGraphSuggest(),200)" autocomplete="off">
@@ -1489,7 +1572,7 @@ window.__STATIC_BORDER_URL__='https://border.gbfranking.com/';
 window.__STATIC_LIVE_URL__='';
 window.__STATIC_HAS_GUILD__=true;
 window.__STATIC_GUILD_LATEST_URL__='https://ev083.gbfranking.com/guild';
-window.__STATIC_EVENT_GUILD_URLS__={"6":"https://ev082.gbfranking.com/guild","10":"https://ev083.gbfranking.com/guild"};
+window.__STATIC_EVENT_GUILD_URLS__={"6":"https://ev082.gbfranking.com/guild","7":"https://ev000.gbfranking.com/guild","10":"https://ev083.gbfranking.com/guild"};
 window.__STATIC_CACHE__=null;
 window.__STATIC_CACHE_PROMISE__=fetch('./data.json.gz')
   .then(function(r){return r.ok?r.arrayBuffer():Promise.reject('HTTP '+r.status);})
@@ -2934,6 +3017,9 @@ async function reload() {
     } else {
       const ep = { morning: 'morning', daily: 'daily', overnight: 'overnight' }[currentTab];
       if (ep) {
+        // 集計タブは日別ファイル(snap-DATE.json.gz)へ分離済み → 静的モードでは当日分を遅延ロード
+        const aggDay = currentDate || snapDayList[snapDayList.length - 1] || '';
+        if (aggDay) await ensureSnapDayLoaded(aggDay);
         const url = `/api/ranking/${ep}?event_id=${currentEventId}${currentDate ? `&date=${currentDate}` : ''}`;
         data = await apiFetch(url);
       }
@@ -3008,9 +3094,11 @@ function renderRanking(data) {
   const badgeEl = document.getElementById('type-badge-label');
   badgeEl.textContent = meta.label;
   badgeEl.className   = `type-badge ${meta.cls}`;
-  // タブのサブテキストを更新（日速のみ）
+  // タブのサブテキストを更新（日速・朝活）
   const dailySubEl = document.getElementById('tab-daily-sub');
-  if (dailySubEl) dailySubEl.textContent = data.isLive ? '7:00→最新' : '7:00→0:00';
+  if (dailySubEl && data.type === '日速') dailySubEl.textContent = data.isLive ? '7:00→最新' : '7:00→0:00';
+  const morningSubEl = document.getElementById('tab-morning-sub');
+  if (morningSubEl && data.type === '朝活') morningSubEl.textContent = data.isLive ? '7:00→最新' : '7:00→8:00';
 
   // 更新中バッジ: afterPlayerCount が 2000未満なら表示
   const updBadge = document.getElementById('updating-badge');
@@ -3036,8 +3124,8 @@ function renderRanking(data) {
     const honorRank = getHonorRank(p);
     const pct       = topHonor > 0 ? (p.honorDiff / topHonor * 100).toFixed(1) : 0;
     const barColor  = honorRank === 1 ? '#fbbf24' : honorRank <= 3 ? '#60a5fa' : honorRank <= 10 ? '#4ade80' : '#6366f1';
-    const diffColor = honorRank === 1 ? '#fbbf24' : honorRank === 2 ? '#c0c0c0' : honorRank === 3 ? '#cd7c32'
-                    : p.honorDiff > 0 ? '#e2e8f0' : '#4b5563';
+    // 増加貢献度は本文色（バー非表示のライトでは黒太字、ダークでは白）
+    const diffColor = 'var(--md-on-surface)';
     const diffSign  = p.honorDiff > 0 ? '+' : '';
     const totalFmt  = p.honor != null ? numFmt(p.honor) : '-';
     const bg        = rowBg(honorRank, displayIdx);
@@ -3114,11 +3202,11 @@ function formatChange(prevRank, rank) {
 }
 
 function rowBg(honorRank, displayIdx) {
-  if (honorRank === 1) return '#2a2200';
-  if (honorRank === 2) return '#1e1e2e';
-  if (honorRank === 3) return '#261400';
+  if (honorRank === 1) return 'var(--row-top1-bg)';
+  if (honorRank === 2) return 'var(--row-top2-bg)';
+  if (honorRank === 3) return 'var(--row-top3-bg)';
   if (displayIdx % 2 === 0) return 'transparent';
-  return 'rgba(255,255,255,0.04)';
+  return 'var(--row-odd-bg)';
 }
 
 function getTierClass(rank) {
@@ -3383,6 +3471,19 @@ function addBattlePlayersToGraph() {
   renderGraph();
 }
 
+function addWatchedPlayersToGraph() {
+  const pool = currentRenderData?.players || window._lastRankingPlayers || [];
+  for (const username of watchedNames) {
+    const key = String(username);
+    if (graphPlayers.find(p => String(p.id ?? p.name) === key || p.name === username)) continue;
+    const found = pool.find(p => p.username === username);
+    const color = GRAPH_COLORS[graphPlayers.length % GRAPH_COLORS.length];
+    graphPlayers.push({ id: found?.player_id ?? null, name: username, color });
+  }
+  updateGraphPlayerTags();
+  renderGraph();
+}
+
 function clearGraphPlayers() {
   graphPlayers = [];
   if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
@@ -3493,6 +3594,30 @@ function hideGraphSuggest() {
   if (el) el.style.display = 'none';
 }
 
+// GBF日アンカー（dayKey の 07:00）から captured_at までの経過分（0〜1439）
+function minutesFromAnchor(capturedAt, dayKey) {
+  const [yy, mm, dd] = dayKey.split('-').map(Number);
+  const anchor = new Date(yy, mm - 1, dd, 7, 0, 0).getTime();
+  const cy = Number(capturedAt.substring(0, 4));
+  const cm = Number(capturedAt.substring(5, 7));
+  const cd = Number(capturedAt.substring(8, 10));
+  const ch = Number(capturedAt.substring(11, 13));
+  const cmin = Number(capturedAt.substring(14, 16));
+  const cap = new Date(cy, cm - 1, cd, ch, cmin, 0).getTime();
+  return Math.round((cap - anchor) / 60000);
+}
+
+// フェーズ別の単日表示時間窓（アンカー07:00からのオフセット分 [start, end]）
+// null = クリップなし（全件）
+function graphPhaseWindow(dayKey) {
+  const period = getGBFPeriodName(dayKey + ' 12:00:00', currentEventStartDate());
+  if (period === '予選1日目')   return [720, 1439]; // 19:00〜翌6:59
+  if (period === '予選2日目')   return [0, 1039];   // 7:00〜24:19
+  if (period.startsWith('本戦')) return [0, 1039];   // 7:00〜24:19
+  if (period === 'インターバル') return [0, 1439];   // 全体
+  return null; // 開始前/その他はクリップなし
+}
+
 // ---- データ取得 ----
 async function loadGraphData() {
   const fromDay = document.getElementById('graph-from-select')?.value;
@@ -3509,6 +3634,19 @@ async function loadGraphData() {
   let snaps = [];
   for (const day of days) snaps.push(...(snapGroups[day] || []));
   snaps.sort((a, b) => a.captured_at.localeCompare(b.captured_at));
+
+  // 単日選択時はフェーズ別の表示時間窓でクリップ
+  // （複数日選択時はクリップせず残業帯も連続表示）
+  if (dayCount === 1) {
+    const dayKey = days[0];
+    const win = graphPhaseWindow(dayKey);
+    if (win) {
+      snaps = snaps.filter(s => {
+        const m = minutesFromAnchor(s.captured_at, dayKey);
+        return m >= win[0] && m <= win[1];
+      });
+    }
+  }
 
   const labels = [];
   const playerSeries = {}; // id -> { speed:[], honor:[], rank:[], timestamps:[] }
@@ -3665,7 +3803,7 @@ async function renderGraph() {
       backgroundColor: gp.color + '15',
       pointRadius: ptRadius,
       pointHoverRadius: ptHoverR,
-      tension: isRank ? 0 : 0.3,
+      tension: 0,
       spanGaps: yKey === 'honor',
       borderWidth: 2,
     });
@@ -3691,7 +3829,7 @@ async function renderGraph() {
           borderWidth: 1.5,
           pointRadius: 0,
           pointHoverRadius: 4,
-          tension: 0.2,
+          tension: 0,
           spanGaps: true,
           fill: false,
         });
@@ -3752,7 +3890,7 @@ async function renderGraph() {
           pointRadius: 0,
           borderWidth: 2,
           borderDash: [8, 4],
-          tension: 0.3,
+          tension: 0,
           spanGaps: yKey === 'honor',
           yAxisID: 'y',
         });
