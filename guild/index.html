@@ -1119,6 +1119,7 @@ async function init() {
   // テーブル列を動的生成
   renderColgroup();
   renderThead();
+  initControlsState();
 
   // 静的モード: キャッシュ読み込み待機 + ヘッダーナビを相対リンクへ付け替え
   if (window.__STATIC_MODE__) {
@@ -1492,7 +1493,19 @@ function renderTable(data) {
   tbody.innerHTML = html;
   document.getElementById('rank-table').style.display = '';
   document.getElementById('search-hit').textContent = search ? `${rows.length}件` : '';
+  updateTableHeight();
 }
+
+// #rank-table-wrap に明示的な高さを設定し、テーブル本体だけが内部スクロールするようにする
+// （個人ランキングと同仕様。これが無いとページ全体がスクロールしヘッダーごと流れる）
+function updateTableHeight() {
+  const wrap = document.getElementById('rank-table-wrap');
+  if (!wrap) return;
+  const top = wrap.getBoundingClientRect().top;
+  const available = (window.innerHeight || document.documentElement.clientHeight) - top - 8;
+  wrap.style.height = Math.max(180, available) + 'px';
+}
+window.addEventListener('resize', updateTableHeight);
 
 function applySearch() { if (lastData) renderTable(lastData); }
 function clearSearch() {
@@ -1805,8 +1818,33 @@ function toggleSidePanel() {
 // ============================================================
 function toggleCtrl() {
   const mc = document.getElementById('main-content');
-  mc.classList.toggle('ctrl-collapsed');
-  document.getElementById('ctrl-toggle-text').textContent = mc.classList.contains('ctrl-collapsed') ? '展開' : '収納';
+  const text = document.getElementById('ctrl-toggle-text');
+  const collapsed = mc.classList.toggle('ctrl-collapsed');
+  if (text) text.textContent = collapsed ? '展開' : '収納';
+  try { localStorage.setItem('guild_ctrl_collapsed', collapsed ? '1' : '0'); } catch {}
+  // 収納アニメーション後に高さを再計算 → テーブルが画面全体に広がる
+  setTimeout(updateTableHeight, 320);
+}
+function initControlsState() {
+  try {
+    if (localStorage.getItem('guild_ctrl_collapsed') === '1') {
+      const mc   = document.getElementById('main-content');
+      const text = document.getElementById('ctrl-toggle-text');
+      if (mc) {
+        mc.classList.add('ctrl-collapsed');
+        // 初回はトランジションを一時停止して瞬時に閉じる
+        const c = document.getElementById('ctrl-collapsible');
+        const i = c?.querySelector('.ctrl-inner');
+        if (c) c.style.transition = 'none';
+        if (i) i.style.transition = 'none';
+        requestAnimationFrame(() => {
+          if (c) c.style.transition = '';
+          if (i) i.style.transition = '';
+        });
+      }
+      if (text) text.textContent = '展開';
+    }
+  } catch {}
 }
 
 // ============================================================
@@ -2223,7 +2261,10 @@ document.addEventListener('keydown', (e) => {
 // ============================================================
 // 初期化実行
 // ============================================================
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  updateTableHeight(); // データ読み込み前でも枠を確保
+  init().catch(err => console.error('[init] FATAL:', err));
+});
 </script>
 </body>
 </html>
