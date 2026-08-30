@@ -1204,6 +1204,19 @@ async function onEventChange() {
   if (!currentEventId) return;
   localStorage.setItem('guild_event_id', currentEventId);
 
+  // 静的モード: 選択イベントが他イベント専用のサブドメインにしか団データが無い場合は
+  // そちらの ev{uid}.example.com/guild へ遷移する（個人ランキング側と同仕様）
+  if (window.__STATIC_MODE__ && window.__STATIC_EVENT_GUILD_URLS__) {
+    const hostM = window.location.hostname.match(/^ev(\d+)\./);
+    const pathM = !hostM && window.location.pathname.match(/-ev(\d+)\//);
+    const currentUrlId = hostM ? hostM[1] : (pathM ? pathM[1] : null);
+    const targetUrl = window.__STATIC_EVENT_GUILD_URLS__[currentEventId];
+    if (targetUrl && !(currentUrlId && (targetUrl.includes(`/ev${currentUrlId}.`) || targetUrl.includes(`-ev${currentUrlId}/`)))) {
+      window.location.href = targetUrl;
+      return;
+    }
+  }
+
   const event = loadedEvents.find(e => e.id === currentEventId);
   if (event) { applyElementTheme(event.name); updateSideEventCard(event.name); }
 
