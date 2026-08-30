@@ -339,6 +339,7 @@ function ensureChartJs() {
     --row-odd-bg:#eaf2fb; --row-hairline:#e3e6ea; --row-hover:rgba(26,115,232,0.10);
   }
   html[data-theme="light"] .type-daily{background:#dcf5e3;color:#15803d;}
+  html[data-theme="light"] .type-morning{background:#fff3d6;color:#92600a;}
   html[data-theme="light"] .gn-clickable:not(.gn-pinned){color:#1a73e8 !important;text-decoration:underline;}
   html[data-theme="light"] .score-bar-bg{opacity:0.30;}
   html[data-theme="light"] .score-diff{color:var(--md-on-surface-variant) !important;font-weight:600;}
@@ -381,6 +382,7 @@ function ensureChartJs() {
   .type-badge{display:inline-block;padding:4px 12px;border-radius:var(--md-shape-full);font-size:0.75rem;font-weight:700;}
   .type-20min{background:var(--md-secondary-container);color:var(--md-on-primary-container);}
   .type-daily{background:#1a3020;color:var(--md-success);}
+  .type-morning{background:#3b2f00;color:var(--md-warning);}
   .type-live{background:rgba(74,222,128,0.12);color:#4ade80;}
   /* Watch star */
   .watch-star{background:none;border:none;cursor:pointer;color:var(--md-outline);font-size:0.6875rem;padding:0 2px;transition:color var(--md-duration-short) var(--md-ease);line-height:1;vertical-align:middle;}
@@ -634,8 +636,9 @@ document.addEventListener('DOMContentLoaded', () => {
   <div id="ctrl-collapsible">
   <div class="ctrl-inner">
     <!-- タブ: 2列 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:4px">
       <button id="tab-20min" class="tab-btn active" onclick="switchTab('20min')">20分速<span class="tab-sub">直近の速度</span></button>
+      <button id="tab-morning" class="tab-btn" onclick="switchTab('morning')">朝活<span class="tab-sub" id="tab-morning-sub">7:00→8:00</span></button>
       <button id="tab-daily" class="tab-btn" onclick="switchTab('daily')">日速<span class="tab-sub" id="tab-daily-sub">7:00→24:00</span></button>
     </div>
 
@@ -1379,7 +1382,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   document.getElementById('snap-selector').style.display = tab === '20min' ? 'grid' : 'none';
-  document.getElementById('period-day-selector').style.display = tab === 'daily' ? 'block' : 'none';
+  document.getElementById('period-day-selector').style.display = tab !== '20min' ? 'block' : 'none';
   reload();
 }
 
@@ -1401,7 +1404,8 @@ async function reload() {
       : await apiFetch(`/api/guild/ranking/latest?event_id=${currentEventId}`, 60000);
   } else {
     const date = currentDate || snapDayList[snapDayList.length - 1];
-    if (date) data = await apiFetch(`/api/guild/ranking/daily?event_id=${currentEventId}&date=${date}`, 60000);
+    const ep = currentTab === 'morning' ? 'morning' : 'daily';
+    if (date) data = await apiFetch(`/api/guild/ranking/${ep}?event_id=${currentEventId}&date=${date}`, 60000);
   }
 
   document.getElementById('loading-msg').style.display = 'none';
@@ -1421,7 +1425,7 @@ function renderTable(data) {
   const maxDiff = Math.max(1, ...guilds.map(g => g.scoreDiff || 0));
 
   // stat-bar
-  const typeMap = { '20分速':'type-20min', '日速': data.isLive ? 'type-live' : 'type-daily' };
+  const typeMap = { '20分速':'type-20min', '朝活': data.isLive ? 'type-live' : 'type-morning', '日速': data.isLive ? 'type-live' : 'type-daily' };
   const typeEl = document.getElementById('stat-type');
   typeEl.className = 'type-badge ' + (typeMap[data.type] || 'type-20min');
   typeEl.textContent = data.type + (data.isLive ? '(進行中)' : '');
@@ -1432,6 +1436,9 @@ function renderTable(data) {
 
   if (currentTab === 'daily') {
     document.getElementById('tab-daily-sub').textContent = data.isLive ? '7:00→最新' : '7:00→24:00';
+  }
+  if (currentTab === 'morning') {
+    document.getElementById('tab-morning-sub').textContent = data.isLive ? '7:00→最新' : '7:00→8:00';
   }
 
   const search = document.getElementById('search-input').value.toLowerCase();
@@ -2253,7 +2260,7 @@ document.addEventListener('keydown', (e) => {
     const dir = e.key === 'ArrowLeft' ? -1 : 1;
     if (currentTab === '20min') {
       shiftSnap(dir);
-    } else if (currentTab === 'daily') {
+    } else if (currentTab === 'daily' || currentTab === 'morning') {
       shiftDate(dir);
     }
   }
