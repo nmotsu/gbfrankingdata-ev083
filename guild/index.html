@@ -700,7 +700,8 @@ document.addEventListener('DOMContentLoaded', () => {
     <span style="font-size:0.6875rem;color:var(--md-on-surface-variant);">バトル:</span>
     <div id="battle-tags" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
     <button id="battle-filter-btn" class="battle-filter-btn" onclick="toggleBattleFilter()">この団だけ表示</button>
-    <button onclick="clearAllBattle()" style="font-size:0.6875rem;color:var(--md-on-surface-variant);background:none;border:none;cursor:pointer;padding:2px 6px;">✕ 全解除</button>
+    <button onclick="openGraphModal()" style="padding:5px 12px;border-radius:var(--md-shape-sm);background:var(--md-surface-container-high);border:1px solid var(--md-outline);color:var(--md-on-surface-variant);cursor:pointer;font-size:12px;flex-shrink:0;transition:all var(--md-duration-short) var(--md-ease)" title="グラフ分析">グラフ</button>
+    <button class="day-nav-btn" onclick="clearAllBattle()" title="バトル登録を全解除">✕ 全解除</button>
     <span id="battle-count" style="font-size:0.6875rem;color:var(--md-on-surface-variant);"></span>
   </div>
 
@@ -1081,6 +1082,29 @@ async function apiFetch(url, ttl = 60000) {
   return data;
 }
 
+// 静的モード: 団の日別20分速/日速/朝活ファイルを遅延ロード（guild-snap-YYYY-MM-DD.json.gz）
+const _guildSnapDayLoading = new Map();
+async function ensureGuildSnapDayLoaded(gbfDay) {
+  if (!window.__STATIC_MODE__ || !gbfDay) return;
+  const daySnaps = snapGroups[gbfDay] || [];
+  if (daySnaps.length === 0) return;
+  const firstKey = `/api/guild/ranking/20min?snapshot_id=${daySnaps[0].id}`;
+  if (window.__STATIC_CACHE__ && firstKey in window.__STATIC_CACHE__) return;
+  if (_guildSnapDayLoading.has(gbfDay)) { await _guildSnapDayLoading.get(gbfDay); return; }
+  const p = fetch(`../guild-snap-${gbfDay}.json.gz`)
+    .then(r => r.ok ? r.arrayBuffer() : null)
+    .then(buf => {
+      if (!buf) return;
+      const dayCache = JSON.parse(pako.inflate(new Uint8Array(buf), { to: 'string' }));
+      window.__STATIC_CACHE__ = window.__STATIC_CACHE__ || {};
+      Object.assign(window.__STATIC_CACHE__, dayCache);
+    })
+    .catch(() => {})
+    .finally(() => _guildSnapDayLoading.delete(gbfDay));
+  _guildSnapDayLoading.set(gbfDay, p);
+  await p;
+}
+
 function numFmt(v) {
   if (v == null) return '-';
   return Number(v).toLocaleString('ja-JP');
@@ -1412,13 +1436,20 @@ async function reload() {
 
   let data = null;
   if (currentTab === '20min') {
-    data = currentSnapId
-      ? await apiFetch(`/api/guild/ranking/20min?snapshot_id=${currentSnapId}`, 60000)
-      : await apiFetch(`/api/guild/ranking/latest?event_id=${currentEventId}`, 60000);
+    if (currentSnapId) {
+      const snap = allGuildSnaps.find(s => s.id === currentSnapId);
+      if (snap) await ensureGuildSnapDayLoaded(getGBFDay(snap.captured_at));
+      data = await apiFetch(`/api/guild/ranking/20min?snapshot_id=${currentSnapId}`, 60000);
+    } else {
+      data = await apiFetch(`/api/guild/ranking/latest?event_id=${currentEventId}`, 60000);
+    }
   } else {
     const date = currentDate || snapDayList[snapDayList.length - 1];
     const ep = currentTab === 'morning' ? 'morning' : 'daily';
-    if (date) data = await apiFetch(`/api/guild/ranking/${ep}?event_id=${currentEventId}&date=${date}`, 60000);
+    if (date) {
+      await ensureGuildSnapDayLoaded(date);
+      data = await apiFetch(`/api/guild/ranking/${ep}?event_id=${currentEventId}&date=${date}`, 60000);
+    }
   }
 
   document.getElementById('loading-msg').style.display = 'none';
@@ -1893,7 +1924,23 @@ async function openGuildModal(guildId, name) {
     return;
   }
 
-  const history = (await apiFetch(`/api/guild/history?event_id=${currentEventId}&guild_id=${guildId}`, 60000)) || [];
+  let history = [];
+  if (window.__STATIC_MODE__) {
+    // 静的モード: 日別20分速データ(遅延ロード)からこの団の履歴を再構築
+    await Promise.all(snapDayList.map(d => ensureGuildSnapDayLoaded(d)));
+    for (const snap of allGuildSnaps.slice().reverse()) { // captured_at ASC
+      const data = await apiFetch(`/api/guild/ranking/20min?snapshot_id=${snap.id}`);
+      const g = data?.guilds?.find(x => x.guild_id === guildId);
+      if (!g) continue;
+      history.push({
+        rank: g.rank, score: g.score,
+        captured_at: snap.captured_at, snapshot_id: snap.id,
+        rank_20min: g.displayRank,
+      });
+    }
+  } else {
+    history = (await apiFetch(`/api/guild/history?event_id=${currentEventId}&guild_id=${guildId}`, 60000)) || [];
+  }
 
   document.getElementById('gmodal-loading').style.display = 'none';
 
@@ -2069,17 +2116,22 @@ async function loadGuildGraphData() {
 
   const days = snapDayList.filter(d => d >= fromDay && d <= toDay);
   const dayCount = days.length;
+
+  if (window.__STATIC_MODE__) {
+    await Promise.all(days.map(d => ensureGuildSnapDayLoaded(d)));
+  }
+
   let snaps = [];
   for (const day of days) snaps.push(...(snapGroups[day] || []));
   snaps.sort((a, b) => a.captured_at.localeCompare(b.captured_at));
 
-  // 団非活動帯（0:03〜6:59）を除外
+  // 団非活動帯（0:11〜6:59）を除外（実際の着地は0:05前後のためmm<=10で判定）
   snaps = snaps.filter(s => {
     const hh = parseInt(s.captured_at.substring(11, 13));
     const mm = parseInt(s.captured_at.substring(14, 16));
-    if (hh === 0 && mm <= 2) return true;
+    if (hh === 0 && mm <= 10) return true;
     if (hh >= 1 && hh < 7) return false;
-    if (hh === 0 && mm > 2) return false;
+    if (hh === 0 && mm > 10) return false;
     return true;
   });
 
@@ -2139,6 +2191,7 @@ async function renderGuildGraph() {
   const yKey = gChartType;
   const isRank = yKey === 'rank';
   const useRelative = yKey === 'score' && scoreOrigin === 'rel';
+  const isMobileGraph = window.innerWidth < 640;
 
   const datasets = graphGuilds.map(g => {
     let series = (guildSeries[g.id] || {})[yKey] || labels.map(() => null);
@@ -2153,8 +2206,9 @@ async function renderGuildGraph() {
       data: series,
       borderColor: g.color,
       backgroundColor: g.color + '15',
-      pointRadius: (yKey === 'speed' && dayCount === 1) ? 2 : 0,
-      pointHoverRadius: 5,
+      // 点サイズ: 単日表示ならスピード/累計どちらも2pt、PCのみ（個人ランキング側と統一）
+      pointRadius: (dayCount === 1 && !isMobileGraph) ? 2 : 0,
+      pointHoverRadius: dayCount <= 2 ? 5 : 3,
       tension: 0,
       spanGaps: yKey === 'score',
       borderWidth: 2,
