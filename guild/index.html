@@ -2254,7 +2254,7 @@ async function renderGuildGraph() {
         const x = xAxis.getPixelForValue(b.idx);
         ctx2.save();
         ctx2.beginPath(); ctx2.setLineDash([4, 5]);
-        ctx2.strokeStyle = b.type === 'midnight' ? 'rgba(251,146,60,0.35)' : 'rgba(96,165,250,0.35)';
+        ctx2.strokeStyle = b.type === 'midnight' ? 'rgba(96,165,250,0.35)' : 'rgba(251,146,60,0.35)';
         ctx2.lineWidth = 1;
         ctx2.moveTo(x, top); ctx2.lineTo(x, bottom); ctx2.stroke();
         ctx2.restore();
