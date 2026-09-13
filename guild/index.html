@@ -2095,10 +2095,46 @@ function clearGraphGuilds() {
 function renderGuildGraphTags() {
   const el = document.getElementById('graph-guild-tags');
   el.innerHTML = graphGuilds.map(g => `
-    <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--md-shape-full);font-size:0.75rem;font-weight:700;background:${g.color}22;border:1px solid ${g.color}66;color:${g.color};">
-      ${escHtml(g.name)}
-      <span onclick="removeGraphGuild(${g.id})" style="cursor:pointer;opacity:0.7;font-size:0.625rem;margin-left:2px;">✕</span>
+    <span class="graph-guild-tag" data-gid="${g.id}"
+      onmouseenter="highlightGuildGraphLine(${g.id})"
+      onmouseleave="unhighlightGuildGraphLine()"
+      ontouchstart="highlightGuildGraphLine(${g.id})"
+      ontouchend="unhighlightGuildGraphLine()"
+      style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--md-shape-full);font-size:0.75rem;font-weight:700;background:${g.color}22;border:1px solid ${g.color}66;color:${g.color};cursor:default;transition:opacity var(--md-duration-short) var(--md-ease);">
+      <span style="pointer-events:none">${escHtml(g.name)}</span>
+      <span onclick="event.stopPropagation();removeGraphGuild(${g.id})" style="cursor:pointer;opacity:0.7;font-size:0.625rem;margin-left:2px;">✕</span>
     </span>`).join('');
+}
+
+// 団グラフのフォーカス機能: タグにホバー(またはタッチ)するとその団の線を強調し、他は暗転させる
+function highlightGuildGraphLine(guildId) {
+  if (!chartInstance) return;
+  const hiPt = graphShowPoints ? graphPointSize : (chartInstance.data.labels?.length <= 2 ? 5 : 3);
+  chartInstance.data.datasets.forEach(ds => {
+    const isTarget = ds._guildId === guildId;
+    ds.borderWidth = isTarget ? 3.5 : 0.7;
+    ds.borderColor = isTarget ? ds._origColor : (ds._origColor || ds.borderColor) + '44';
+    ds.pointRadius = isTarget ? Math.max(hiPt, 2) : 0;
+    ds.pointBorderColor     = isTarget ? ds._origColor : 'transparent';
+    ds.pointBackgroundColor = isTarget ? ds._origColor : 'transparent';
+  });
+  chartInstance.update('none');
+  document.querySelectorAll('.graph-guild-tag').forEach(el => {
+    el.style.opacity = Number(el.dataset.gid) === guildId ? '1' : '0.35';
+  });
+}
+function unhighlightGuildGraphLine() {
+  if (!chartInstance) return;
+  const basePt = graphShowPoints ? graphPointSize : 0;
+  chartInstance.data.datasets.forEach(ds => {
+    ds.borderWidth = 2;
+    ds.borderColor = ds._origColor || ds.borderColor;
+    ds.pointRadius = basePt;
+    ds.pointBorderColor     = ds._origColor || ds.borderColor;
+    ds.pointBackgroundColor = ds._origColor || ds.borderColor;
+  });
+  chartInstance.update('none');
+  document.querySelectorAll('.graph-guild-tag').forEach(el => { el.style.opacity = ''; });
 }
 function removeGraphGuild(id) {
   graphGuilds = graphGuilds.filter(g => g.id !== id);
@@ -2226,6 +2262,8 @@ async function renderGuildGraph() {
     }
     return {
       label: g.name,
+      _guildId: g.id,
+      _origColor: g.color,
       data: series,
       borderColor: g.color,
       backgroundColor: g.color + '15',
