@@ -2331,12 +2331,13 @@ async function renderGuildGraph() {
       if (!restBands?.length || dayCount <= 1) return;
       const ctx2 = chart.ctx, { top, bottom } = chart.chartArea;
       const xAxis = chart.scales.x;
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
       restBands.forEach(band => {
         if (band.startIdx >= labels.length) return;
         const x0 = xAxis.getPixelForValue(band.startIdx);
         const x1 = xAxis.getPixelForValue(band.endIdx);
         ctx2.save();
-        ctx2.fillStyle = 'rgba(148,163,184,0.10)';
+        ctx2.fillStyle = isLight ? 'rgba(71,85,105,0.16)' : 'rgba(148,163,184,0.10)';
         ctx2.fillRect(x0, top, x1 - x0, bottom - top);
         ctx2.restore();
       });
