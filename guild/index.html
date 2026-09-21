@@ -1128,6 +1128,19 @@ function numFmt(v) {
   if (v == null) return '-';
   return Number(v).toLocaleString('ja-JP');
 }
+
+// グラフ表示専用: ラベル末尾の "HH:mm" を直近20分刻み(:00/:20/:40)に丸める
+// （実際の取得時刻は内部処理でそのまま使用し、表示のみ統一する）
+function roundTimeLabel(label) {
+  const m = String(label).match(/^(.*) (\d{1,2}):(\d{2})$/);
+  if (!m) return label;
+  const [, prefix, hhStr, mmStr] = m;
+  let hh = parseInt(hhStr), mm = parseInt(mmStr);
+  const roundedMin = Math.round(mm / 20) * 20;
+  hh = (hh + Math.floor(roundedMin / 60)) % 24;
+  mm = roundedMin % 60;
+  return `${prefix} ${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+}
 function escHtml(s) {
   return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
@@ -2216,18 +2229,49 @@ async function loadGuildGraphData() {
     }
   }
 
-  // 境界検出
-  const boundaries = [];
-  for (let i = 1; i < labels.length; i++) {
-    const prev = labels[i-1], curr = labels[i];
-    const pd = prev.split(' ')[0], cd = curr.split(' ')[0];
-    const ph = parseInt((prev.split(' ')[1] || '00:00').split(':')[0]);
-    const ch = parseInt((curr.split(' ')[1] || '00:00').split(':')[0]);
-    if (pd !== cd) boundaries.push({ idx: i, type: 'midnight' });
-    else if (ph < 7 && ch >= 7) boundaries.push({ idx: i, type: 'morning' });
-  }
+  // 休み期間（夜間）の帯を検出: 団ランキングは2日目24:00〜本戦1日目7:00をインターバル日込みで1本の帯にする
+  const eventStartDate = loadedEvents.find(e => e.id === currentEventId)?.start_date || null;
+  const restBands = computeRestBands(labels, eventStartDate, true);
 
-  return { labels, guildSeries, dayCount, boundaries };
+  return { labels, guildSeries, dayCount, restBands };
+}
+
+// 古戦場スケジュールに基づく休み期間（夜間）の時間帯を算出
+// Day1=開催開始日 ... Day2=予選終了日 Day3=インターバル日 Day4-7=本戦1-4日目
+// mergeInterval=true（団ランキング用）: Day2 24:00〜Day4 7:00 をインターバル日全体込みで1本の帯にする
+function computeRestWindows(startDateStr, mergeInterval) {
+  if (!startDateStr) return [];
+  const [y, m, d] = startDateStr.split('-').map(Number);
+  const dayDate = (offset) => new Date(y, m - 1, d + offset);
+  const at = (date, hh) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), hh, 0, 0);
+  const windows = [];
+  if (mergeInterval) {
+    windows.push([at(dayDate(2), 0), at(dayDate(3), 7)]);   // 2日目24:00 〜 本戦1日目7:00
+  } else {
+    windows.push([at(dayDate(2), 0), at(dayDate(2), 7)]);   // 2日目24:00 〜 3日目7:00
+  }
+  windows.push([at(dayDate(4), 0), at(dayDate(4), 7)]);      // 本戦1日目24:00 〜 本戦2日目7:00
+  windows.push([at(dayDate(5), 0), at(dayDate(5), 7)]);      // 本戦2日目24:00 〜 本戦3日目7:00
+  windows.push([at(dayDate(6), 0), at(dayDate(6), 7)]);      // 本戦3日目24:00 〜 本戦4日目7:00
+  return windows;
+}
+
+// labels（"MM-DD HH:mm"形式、年なし）に対して休み期間の帯をラベル配列のインデックス範囲に変換
+function computeRestBands(labels, startDateStr, mergeInterval) {
+  if (!startDateStr || !labels.length) return [];
+  const fmt = (date) => `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  const bands = [];
+  for (const [startD, endD] of computeRestWindows(startDateStr, mergeInterval)) {
+    const startStr = fmt(startD), endStr = fmt(endD);
+    // 夜間は間引き取得等でラベルが疎な場合があるため、窓の直前の最後のラベル〜
+    // 窓の直後の最初のラベルまでを帯として描画し、データの空白区間を視覚的に覆う
+    let startIdx = -1;
+    for (let i = 0; i < labels.length; i++) { if (labels[i] < startStr) startIdx = i; else break; }
+    const endIdx = labels.findIndex(l => l > endStr);
+    if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) continue;
+    bands.push({ startIdx, endIdx });
+  }
+  return bands;
 }
 
 async function renderGuildGraph() {
@@ -2247,7 +2291,7 @@ async function renderGuildGraph() {
   loadEl.style.display = 'none';
   if (!result) return;
 
-  const { labels, guildSeries, dayCount, boundaries } = result;
+  const { labels, guildSeries, dayCount, restBands } = result;
   const yKey = gChartType;
   const isRank = yKey === 'rank';
   const useRelative = yKey === 'score' && scoreOrigin === 'rel';
@@ -2283,18 +2327,17 @@ async function renderGuildGraph() {
 
   const boundaryPlugin = {
     id: 'guildBoundaryLines',
-    afterDraw(chart) {
-      if (!boundaries?.length || dayCount <= 1) return;
+    beforeDraw(chart) {
+      if (!restBands?.length || dayCount <= 1) return;
       const ctx2 = chart.ctx, { top, bottom } = chart.chartArea;
       const xAxis = chart.scales.x;
-      boundaries.forEach(b => {
-        if (b.idx >= labels.length) return;
-        const x = xAxis.getPixelForValue(b.idx);
+      restBands.forEach(band => {
+        if (band.startIdx >= labels.length) return;
+        const x0 = xAxis.getPixelForValue(band.startIdx);
+        const x1 = xAxis.getPixelForValue(band.endIdx);
         ctx2.save();
-        ctx2.beginPath(); ctx2.setLineDash([4, 5]);
-        ctx2.strokeStyle = b.type === 'midnight' ? 'rgba(96,165,250,0.35)' : 'rgba(251,146,60,0.35)';
-        ctx2.lineWidth = 1;
-        ctx2.moveTo(x, top); ctx2.lineTo(x, bottom); ctx2.stroke();
+        ctx2.fillStyle = 'rgba(148,163,184,0.10)';
+        ctx2.fillRect(x0, top, x1 - x0, bottom - top);
         ctx2.restore();
       });
     }
@@ -2309,7 +2352,7 @@ async function renderGuildGraph() {
   if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(ctx, {
     type: 'line',
-    data: { labels, datasets },
+    data: { labels: labels.map(roundTimeLabel), datasets },
     plugins: [boundaryPlugin],
     options: {
       responsive: false, maintainAspectRatio: false,
