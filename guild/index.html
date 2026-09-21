@@ -2198,15 +2198,16 @@ async function loadGuildGraphData() {
   for (const day of days) snaps.push(...(snapGroups[day] || []));
   snaps.sort((a, b) => a.captured_at.localeCompare(b.captured_at));
 
-  // 団非活動帯（0:11〜6:59）を除外（実際の着地は0:05前後のためmm<=10で判定）
-  snaps = snaps.filter(s => {
-    const hh = parseInt(s.captured_at.substring(11, 13));
-    const mm = parseInt(s.captured_at.substring(14, 16));
-    if (hh === 0 && mm <= 10) return true;
-    if (hh >= 1 && hh < 7) return false;
-    if (hh === 0 && mm > 10) return false;
-    return true;
-  });
+  // 単日選択時は7:00〜24:05でクリップ（複数日選択時はクリップせず夜間帯も連続表示。個人ランキングと同仕様）
+  if (dayCount === 1) {
+    const [yy, mm, dd] = days[0].split('-').map(Number);
+    const startMs = new Date(yy, mm - 1, dd, 7, 0, 0).getTime();
+    const endMs   = new Date(yy, mm - 1, dd + 1, 0, 20, 0).getTime(); // 24:00境界スナップの着地ズレを吸収
+    snaps = snaps.filter(s => {
+      const t = new Date(s.captured_at.replace(' ', 'T')).getTime();
+      return t >= startMs && t <= endMs;
+    });
+  }
 
   const labels = [];
   const guildSeries = {};
@@ -2263,12 +2264,10 @@ function computeRestBands(labels, startDateStr, mergeInterval) {
   const bands = [];
   for (const [startD, endD] of computeRestWindows(startDateStr, mergeInterval)) {
     const startStr = fmt(startD), endStr = fmt(endD);
-    // 夜間は間引き取得等でラベルが疎な場合があるため、窓の直前の最後のラベル〜
-    // 窓の直後の最初のラベルまでを帯として描画し、データの空白区間を視覚的に覆う
-    let startIdx = -1;
-    for (let i = 0; i < labels.length; i++) { if (labels[i] < startStr) startIdx = i; else break; }
-    const endIdx = labels.findIndex(l => l > endStr);
-    if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) continue;
+    const startIdx = labels.findIndex(l => l >= startStr);
+    let endIdx = -1;
+    for (let i = labels.length - 1; i >= 0; i--) { if (labels[i] <= endStr) { endIdx = i; break; } }
+    if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) continue;
     bands.push({ startIdx, endIdx });
   }
   return bands;
