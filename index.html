@@ -347,6 +347,8 @@ function ensureChartJs() {
     --row-odd-bg: rgba(255,255,255,0.04);
     --row-hairline: rgba(255,255,255,0.05);
     --row-hover: rgba(255,255,255,0.05);
+    /* 補足テキスト（タブの時間帯表示など）: 背景に対してコントラスト4.5:1以上を確保した色 */
+    --text-caption: #a3b1c4;
   }
   /* === ライトモード（data-theme="light" で base 変数を上書き、MD3トークンへ波及） === */
   html[data-theme="light"] {
@@ -368,6 +370,7 @@ function ensureChartJs() {
     --row-odd-bg: #eaf2fb;
     --row-hairline: #e3e6ea;
     --row-hover: rgba(26,115,232,0.10);
+    --text-caption: #4b5563;
   }
   html[data-theme="light"] .type-morning  { background:#fff3d6; color:#92600a; }
   html[data-theme="light"] .type-daily    { background:#dcf5e3; color:#15803d; }
@@ -420,7 +423,9 @@ function ensureChartJs() {
   .tab-btn.active { background: var(--md-surface-container-high); color: var(--md-primary); border-color: var(--md-primary); box-shadow: 0 0 8px color-mix(in srgb, var(--elem-color) 40%, transparent); }
   .tab-btn:not(.active) { background: var(--md-surface-container-high); color: var(--md-on-surface-variant); }
   .tab-btn:not(.active):hover { background: var(--md-surface-bright); color: var(--md-on-surface); }
-  .tab-sub { font-size: 0.5625rem; font-weight:400; opacity:0.65; }
+  /* 時間帯の補足: 9px・不透明度65%（コントラスト3.1:1）だったため、11px・専用の補足色（4.5:1以上）に変更 */
+  .tab-sub { font-size: 0.6875rem; font-weight:400; color: var(--text-caption); }
+  .tab-btn.active .tab-sub { color: var(--md-on-surface); }
   tr.rank-row:nth-child(even) { background: var(--row-odd-bg); }
   .rank-row:hover { background: var(--row-hover) !important; }
   .rank-row.top-1 { border-left: 4px solid var(--md-warning); box-shadow: inset 60px 0 20px -20px rgba(251,191,36,0.12); }
@@ -459,7 +464,7 @@ function ensureChartJs() {
   .day-nav-btn:hover { background: var(--md-surface-bright); color: var(--md-on-surface); }
   .day-nav-btn:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
   /* タイプバッジ */
-  .type-badge    { display: inline-block; padding: 4px 12px; border-radius: var(--md-shape-full); font-size: 0.75rem; font-weight: 700; }
+  .type-badge    { display: inline-block; padding: 4px 12px; border-radius: var(--md-shape-full); font-size: 0.75rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
   .type-20min    { background: var(--md-secondary-container); color: var(--md-on-primary-container); }
   .type-morning  { background: #3b2f00; color: var(--md-warning); }
   .type-daily    { background: #1a3020; color: var(--md-success); }
@@ -916,10 +921,10 @@ class VirtualScroll {
 
     <!-- ① タブ: 4列1行（全幅） -->
     <div id="tab-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
-      <button class="tab-btn active" id="tab-20min" onclick="switchTab('20min')">20分速<span class="tab-sub">直前→最新</span></button>
+      <button class="tab-btn active" id="tab-20min" onclick="switchTab('20min')">20分速<span class="tab-sub">直近の速度</span></button>
       <button class="tab-btn" id="tab-morning" onclick="switchTab('morning')">朝活<span class="tab-sub" id="tab-morning-sub">7:00→8:00</span></button>
       <button class="tab-btn" id="tab-daily" onclick="switchTab('daily')">日速<span class="tab-sub" id="tab-daily-sub">7:00→最新</span></button>
-      <button class="tab-btn" id="tab-overnight" onclick="switchTab('overnight')">残業<span class="tab-sub">0:00→7:00</span></button>
+      <button class="tab-btn" id="tab-overnight" onclick="switchTab('overnight')">残業<span class="tab-sub" id="tab-overnight-sub">24:00→7:00</span></button>
     </div>
 
     <!-- ② コントロール列（左）+ 広告列（右・全高span） -->
@@ -1046,7 +1051,6 @@ class VirtualScroll {
     <!-- 統計バー（テーブルカード内ヘッダー） -->
     <div id="stat-bar" style="display:none;align-items:center;gap:10px">
       <span id="type-badge-label" class="type-badge type-20min">20分速</span>
-      <span class="text-gray-400">期間:</span>
       <span id="stat-range" class="text-blue-300 font-mono text-xs"></span>
       <button onclick="openSaveModal()" style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:var(--md-shape-sm);background:var(--md-surface-container-high);border:1px solid var(--md-outline);color:var(--md-on-surface-variant);cursor:pointer;flex-shrink:0" title="PNG保存">保存</button>
     </div>
@@ -1148,6 +1152,7 @@ class VirtualScroll {
             <option value="500">500位</option>
             <option value="1000">1,000位</option>
             <option value="2000">2,000位</option>
+            <option value="10000">1万位</option>
             <option value="100000">10万位</option>
             <option value="150000">15万位</option>
             <option value="200000">20万位</option>
@@ -1243,7 +1248,7 @@ class VirtualScroll {
         <div class="help-grid">
           <div class="help-grid-item" style="border-left:3px solid var(--elem-color)">
             <div style="color:var(--elem-color);font-weight:700">残業</div>
-            <div style="color:var(--md-on-surface-variant);margin-top:4px">0:00 → 7:00（深夜帯）の累計増加量。期間中は最新スナップまでライブ更新、7:00 到達で確定。</div>
+            <div style="color:var(--md-on-surface-variant);margin-top:4px">24:00 → 7:00（深夜帯）の累計増加量。期間中は最新スナップまでライブ更新、7:00 到達で確定。</div>
           </div>
           <div class="help-grid-item" style="border-left:3px solid #fbbf24">
             <div style="color:#fbbf24;font-weight:700">朝活</div>
@@ -1251,7 +1256,7 @@ class VirtualScroll {
           </div>
           <div class="help-grid-item" style="border-left:3px solid #4ade80">
             <div style="color:#4ade80;font-weight:700">日速</div>
-            <div style="color:var(--md-on-surface-variant);margin-top:4px">7:00 → 翌0:00（1日全体）の累計増加量。期間中はライブ更新、翌0:00 到達で確定。</div>
+            <div style="color:var(--md-on-surface-variant);margin-top:4px">7:00 → 24:00（1日全体）の累計増加量。期間中はライブ更新、24:00 到達で確定。</div>
           </div>
           <div class="help-grid-item" style="border-left:3px solid #93c5fd">
             <div style="color:#93c5fd;font-weight:700">20分速</div>
@@ -1550,6 +1555,19 @@ class VirtualScroll {
         <div class="save-label">出力項目</div>
         <div class="col-check-grid" id="save-col-checks"></div>
       </div>
+      <!-- レイアウト・テーマ -->
+      <div class="save-section">
+        <div class="save-label">画像レイアウト</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--md-on-surface-variant)">列数</span>
+          <input type="number" id="save-col-count" value="1" min="1" max="10" style="width:56px;font-size:12px;padding:3px 6px;background:var(--md-surface-container-high);border:1px solid var(--md-outline);border-radius:4px;color:var(--md-on-surface);text-align:right">
+          <span style="font-size:12px;color:var(--md-on-surface-variant);margin-left:10px">画像テーマ</span>
+          <select id="save-theme" class="save-select">
+            <option value="light">ライト</option>
+            <option value="dark">ダーク</option>
+          </select>
+        </div>
+      </div>
       <!-- オプション -->
       <div id="save-solo-section" class="save-section" style="display:none">
         <div class="save-label">オプション</div>
@@ -1633,6 +1651,7 @@ let currentEventIsDemo = false;
 let currentEventDates  = { start: null, end: null };
 let playerSearchTerm   = '';
 let flashOnRender      = false;
+let updBadgeShownAt    = 0; // 更新中バッジを最後に「進行中」と確認できた時刻（陳腐化検知用）
 
 // 推定ソロ設定
 const _soloSaved = (() => { try { return JSON.parse(localStorage.getItem('gbf_solo') || '{}'); } catch { return {}; } })();
@@ -1681,7 +1700,13 @@ async function apiFetch(url) {
   if (window.__STATIC_CACHE__ && url in window.__STATIC_CACHE__) return window.__STATIC_CACHE__[url];
   const entry = _apiCache.get(url);
   if (entry && Date.now() - entry.ts < API_CACHE_TTL) return entry.data;
-  const data = await fetch(url).then(r => r.ok ? r.json() : null).catch(() => null);
+  const timeoutMs = 15000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const data = await fetch(url, { signal: controller.signal })
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null)
+    .finally(() => clearTimeout(timer));
   if (data != null) _apiCache.set(url, { data, ts: Date.now() });
   return data;
 }
@@ -1804,11 +1829,33 @@ async function loadSoloDifficulties() {
 // タブごとの計測時間（分）
 const TAB_DURATION_MIN = { '20min': 20, 'morning': 60, 'daily': 1020, 'overnight': 420 };
 
+// 休み期間（予選2日目24:00〜翌7:00、本戦1〜3日目24:00〜翌7:00）はソロ行動が出来ないため、
+// 推定ソロ判定の対象から除外する（computeRestWindowsはグラフの休み期間帯表示と共通のロジック）。
+function isNightRestPeriod(capturedAt) {
+  if (!capturedAt) return false;
+  const startDateStr = currentEventStartDate();
+  if (!startDateStr) return false;
+  const windows = computeRestWindows(startDateStr, false);
+  const [datePart, timePart] = capturedAt.split(' ');
+  const [y, m, d] = (datePart || '').split('-').map(Number);
+  const [hh, mm, ss] = (timePart || '00:00:00').split(':').map(Number);
+  if (!y || !m || !d) return false;
+  const t = new Date(y, m - 1, d, hh || 0, mm || 0, ss || 0).getTime();
+  return windows.some(([from, to]) => t >= from.getTime() && t <= to.getTime());
+}
+
 // 貢献度/討伐数 がいずれかの難易度値の設定範囲内に収まる場合、難易度名を返す
 // 討伐数は「20分あたり」に換算してから閾値と比較（朝活・日速は時間が長い分、討伐数が増えるため）
 function getSoloMatch(p) {
   if (!soloEnabled) return null;
   if (currentTab === 'overnight') return null; // 残業はソロ不可
+  // 区間の終端(after)ではなく開始(before)で判定する。例えば23:41→翌0:01のような
+  // 深夜0:00をまたぐ区間は、実際の活動の大半が休み期間突入前（23:41〜24:00）に
+  // 行われているため、afterだけで見ると休み期間扱いになり誤ってソロ判定が消えてしまう。
+  // 20分速の個々の区間だけを対象にする。朝活(7:00〜8:00)・日速(7:00〜24:00)は区間の開始が
+  // 常に7:00台（＝休み期間終端バッファの7:00〜7:20と重なる）になるため、20分速と同じ判定を
+  // 適用すると「夜と無関係なのに常にソロ判定なし」になってしまう。
+  if (currentTab === '20min' && isNightRestPeriod(currentRenderData?.before)) return null; // 休み期間（夜間）はソロ不可
   if (p.honorDiff == null || p.killDiff == null || p.killDiff < 1) return null;
   const durationMin = TAB_DURATION_MIN[currentTab] ?? 20;
   const killsPer20  = p.killDiff / (durationMin / 20);
@@ -1902,6 +1949,10 @@ function openSaveModal() {
     </label>`;
   }).join('');
   document.getElementById('save-range-to').value = Math.min(players.length, 100);
+  document.getElementById('save-col-count').value = 1;
+  // サイトが現在ダークモードでも、画像出力はダークモード運用者以外にも見やすいライトを既定にする。
+  // 選択自体は保存設定時に毎回選べる。
+  document.getElementById('save-theme').value = 'light';
   // 推定ソロセクション（ソロ有効時のみ表示）
   const soloSec = document.getElementById('save-solo-section');
   if (soloSec) {
@@ -1988,8 +2039,46 @@ function execSavePNG() {
   const fontBold = 'bold 13px "Hiragino Kaku Gothic Pro","Meiryo",sans-serif';
   const fontSm   = '10px sans-serif';
 
-  const totalW = colWidths.reduce((a, b) => a + b, 0) + padX * 2;
-  const totalH = padY + titleH + headerH + rowH * sliced.length + footerH + padY;
+  // ---- レイアウト・テーマ設定 ----
+  // 何行で折り返すかをユーザーが指定できる（縦に長くなりすぎるのを防ぐ）。
+  // 画像テーマはサイトの現在の配色から独立させ、保存設定時に選んだ値を毎回使う
+  // （ダークモード運用中でも既定はライトで、意図せず読みにくい画像にならないようにする）。
+  const colCount = Math.max(1, Math.min(10, parseInt(document.getElementById('save-col-count').value) || 1));
+  const theme    = document.getElementById('save-theme').value === 'dark' ? 'dark' : 'light';
+  const PALETTE = {
+    light: {
+      bgMain: '#f4f5f7', bgDim: '#e7e9ec', bgContHigh: '#dfe2e7', outlineVar: '#cfd3da',
+      textMain: '#1a1d21', textMuted: '#586173', colorGN: '#1a73e8', rowOddBg: '#eaf2fb',
+      bg1: '#fdf6cf', bg2: '#edf1f6', bg3: '#fce4e4',
+    },
+    dark: {
+      bgMain: '#111827', bgDim: '#1e2a3d', bgContHigh: '#1a2438', outlineVar: '#2e3f58',
+      textMain: '#e8edf4', textMuted: '#8fa8c8', colorGN: '#e8edf4', rowOddBg: 'rgba(255,255,255,0.06)',
+      bg1: '#3d2c00', bg2: '#1c2540', bg3: '#3a1e00',
+    },
+  };
+  const pal = PALETTE[theme];
+  const elemColor    = getComputedStyle(document.documentElement).getPropertyValue('--elem-color').trim() || '#3b82f6';
+  const colorSuccess = '#4ade80';
+  const colorWarn    = '#fbbf24';
+  const colorErr     = '#f87171';
+  const colorUp      = '#60a5fa';
+  const colorDown    = colorErr;
+
+  // 指定列数に行を分割（左から順に詰める）
+  const rowsPerGrp = Math.ceil(sliced.length / colCount);
+  const groups = [];
+  for (let g = 0; g < colCount; g++) {
+    const part = sliced.slice(g * rowsPerGrp, (g + 1) * rowsPerGrp);
+    if (part.length > 0) groups.push({ rows: part, startIdx: g * rowsPerGrp });
+  }
+  const actualCols     = groups.length || 1;
+  const maxRowsInGroup = Math.max(1, ...groups.map(g => g.rows.length));
+
+  const groupW  = colWidths.reduce((a, b) => a + b, 0) + padX * 2;
+  const groupGap = 20;
+  const totalW = groupW * actualCols + groupGap * (actualCols - 1);
+  const totalH = padY + titleH + headerH + rowH * maxRowsInGroup + footerH + padY;
 
   const canvas = document.createElement('canvas');
   canvas.width  = totalW * dpr;
@@ -1997,33 +2086,12 @@ function execSavePNG() {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  // ---- 画像出力専用カラーパレット（現在のテーマに追従）----
-  const cs        = getComputedStyle(document.documentElement);
-  const elemColor = cs.getPropertyValue('--elem-color').trim() || '#3b82f6';
-  const isLight   = document.documentElement.getAttribute('data-theme') === 'light';
-
-  const bgMain      = isLight ? '#f4f5f7' : '#111827';
-  const bgDim       = isLight ? '#e7e9ec' : '#1e2a3d';
-  const bgContHigh  = isLight ? '#dfe2e7' : '#1a2438';
-  const outlineVar  = isLight ? '#cfd3da' : '#2e3f58';
-  const textMain    = isLight ? '#1a1d21' : '#e8edf4';
-  const textMuted   = isLight ? '#586173' : '#8fa8c8';
-  const colorSuccess= '#4ade80';
-  const colorWarn   = '#fbbf24';
-  const colorErr    = '#f87171';
-  const colorGN     = isLight ? '#1a73e8' : textMain;
-  const colorUp     = '#60a5fa';
-  const colorDown   = colorErr;
-  const bg1         = isLight ? '#fdf6cf' : '#3d2c00';
-  const bg2         = isLight ? '#edf1f6' : '#1c2540';
-  const bg3         = isLight ? '#fce4e4' : '#3a1e00';
-
   // 全体背景
-  ctx.fillStyle = bgMain;
+  ctx.fillStyle = pal.bgMain;
   ctx.fillRect(0, 0, totalW, totalH);
 
-  // タイトル背景（surface-dim）
-  ctx.fillStyle = bgDim;
+  // タイトル背景（surface-dim、全幅）
+  ctx.fillStyle = pal.bgDim;
   ctx.fillRect(0, 0, totalW, padY + titleH);
 
   // 左アクセントライン（属性カラー）
@@ -2041,139 +2109,153 @@ function execSavePNG() {
   ctx.fillText(tabLabel, padX + 8, padY + titleH / 2 + 5);
   const tabW = ctx.measureText(tabLabel).width;
   ctx.font = '12px sans-serif';
-  ctx.fillStyle = textMuted;
+  ctx.fillStyle = pal.textMuted;
   const sub = [eventName, rangeStr, `${fromRank}〜${toRank}位`].filter(Boolean).join('  ');
   ctx.fillText('  |  ' + sub, padX + 8 + tabW, padY + titleH / 2 + 5);
 
-  // テーブルヘッダー行
-  let baseY = padY + titleH;
-  ctx.fillStyle = bgContHigh;
-  ctx.fillRect(0, baseY, totalW, headerH);
-  ctx.font = fontBold;
-  ctx.fillStyle = textMuted;
-  let cx = padX;
-  allCols.forEach((k, ci) => {
-    ctx.fillText(colLabels[ci], cx + 4, baseY + headerH / 2 + 5);
-    cx += colWidths[ci];
-  });
-  ctx.strokeStyle = outlineVar;
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(0, baseY + headerH); ctx.lineTo(totalW, baseY + headerH); ctx.stroke();
+  // ---- グループ（列）ごとの描画 ----
+  groups.forEach((group, gi) => {
+    const gx = gi * (groupW + groupGap);
 
-  // ---- データ行 ----
-  baseY += headerH;
-  sliced.forEach((p, i) => {
-    const rowY  = baseY + i * rowH;
-    const textY = rowY + rowH / 2 + 5;
-    const hr    = p.honorRank ?? 999; // 増加量順位
-
-    // 行背景（サイトの rowBg と同じ）
-    ctx.fillStyle = hr === 1 ? bg1 : hr === 2 ? bg2 : hr === 3 ? bg3 : bgMain;
-    ctx.fillRect(0, rowY, totalW, rowH);
-    // rank4以降: 奇数行に白オーバーレイ（サイトの rgba(255,255,255,0.04) と同じ）
-    if (hr > 3 && (fromRank - 1 + i) % 2 === 1) {
-      ctx.fillStyle = 'rgba(255,255,255,0.06)';
-      ctx.fillRect(0, rowY, totalW, rowH);
-    }
-
-    ctx.font = font;
-    let rx = padX;
-
+    // ヘッダー行
+    let baseY = padY + titleH;
+    ctx.fillStyle = pal.bgContHigh;
+    ctx.fillRect(gx, baseY, groupW, headerH);
+    ctx.font = fontBold;
+    ctx.fillStyle = pal.textMuted;
+    let cx = gx + padX;
     allCols.forEach((k, ci) => {
-      const tx = rx + 4;
+      ctx.fillText(colLabels[ci], cx + 4, baseY + headerH / 2 + 5);
+      cx += colWidths[ci];
+    });
+    ctx.strokeStyle = pal.outlineVar;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(gx, baseY + headerH); ctx.lineTo(gx + groupW, baseY + headerH); ctx.stroke();
 
-      if (k === '_rank') {
-        // 表示順位（連番）— .cell-rank は --md-on-surface-variant (textMuted)
-        ctx.fillStyle = textMuted;
-        ctx.fillText(String(fromRank + i), tx, textY);
+    // データ行
+    baseY += headerH;
+    group.rows.forEach((p, i) => {
+      const globalIdx = group.startIdx + i;
+      const rowY  = baseY + i * rowH;
+      const textY = rowY + rowH / 2 + 5;
+      const hr    = p.honorRank ?? 999; // 増加量順位
 
-      } else if (k === 'honorRank') {
-        // 増加量順位：top3はメダル色
-        ctx.fillStyle = hr === 1 ? colorWarn : hr === 2 ? '#c0c0c0' : hr === 3 ? '#cd7c32' : textMain;
-        ctx.fillText(String(hr < 999 ? hr : fromRank + i), tx, textY);
-
-      } else if (k === 'rank') {
-        // .cell-rank は --md-on-surface-variant (textMuted)
-        ctx.fillStyle = textMuted;
-        ctx.fillText(String(p.rank ?? '-'), tx, textY);
-
-      } else if (k === 'rankChange') {
-        // ▲▼→NEW — サイトの formatChange と完全一致
-        if (p.prevRank == null) {
-          ctx.fillStyle = colorSuccess;
-          ctx.fillText('NEW', tx, textY);
-        } else {
-          const rc = p.rankChange ?? 0;
-          if (rc > 0) {
-            ctx.fillStyle = colorUp; // .up = --md-primary = elemColor
-            ctx.fillText(`▲${rc}`, tx, textY);
-          } else if (rc < 0) {
-            ctx.fillStyle = colorDown;
-            ctx.fillText(`▼${Math.abs(rc)}`, tx, textY);
-          } else {
-            ctx.fillStyle = textMuted;
-            ctx.fillText('→', tx, textY);
-          }
-        }
-
-      } else if (k === 'username') {
-        const isSolo = showSoloIcon && getSoloMatch(p) != null;
-        if (isSolo) {
-          ctx.fillStyle = colorErr;
-          const tag = '[S] ';
-          ctx.fillText(tag, tx, textY);
-          ctx.fillStyle = colorGN;
-          ctx.fillText(p.username ?? '', tx + ctx.measureText(tag).width, textY);
-        } else {
-          ctx.fillStyle = colorGN;
-          ctx.fillText(p.username ?? '', tx, textY);
-        }
-
-      } else if (k === 'killDiff') {
-        // .cell-kill は --md-on-surface-variant (textMuted)
-        const kv = p.killDiff ?? 0;
-        ctx.fillStyle = textMuted;
-        ctx.fillText(kv > 0 ? '+' + numFmt(kv) : kv === 0 ? '-' : numFmt(kv), tx, textY);
-
-      } else if (k === 'honorDiff') {
-        // diffColor と同じロジック（サイトの renderRanking と一致）
-        ctx.fillStyle = hr === 1 ? colorWarn : hr === 2 ? '#c0c0c0' : hr === 3 ? '#cd7c32'
-                      : (p.honorDiff ?? 0) > 0 ? textMain : textMuted;
-        const sign = (p.honorDiff ?? 0) > 0 ? '+' : '';
-        ctx.fillText(sign + numFmt(p.honorDiff ?? 0), tx, textY);
-
-      } else if (k === 'honor') {
-        ctx.fillStyle = textMain;
-        ctx.fillText(p.honor != null ? numFmt(p.honor) : '-', tx, textY);
-
-      } else {
-        ctx.fillStyle = textMain;
-        ctx.fillText(p[k] != null ? String(p[k]) : '', tx, textY);
+      // 行背景（サイトの rowBg と同じ）
+      ctx.fillStyle = hr === 1 ? pal.bg1 : hr === 2 ? pal.bg2 : hr === 3 ? pal.bg3 : pal.bgMain;
+      ctx.fillRect(gx, rowY, groupW, rowH);
+      // rank4以降: 奇数行にゼブラ（サイトの --row-odd-bg と同じ値。ライト/ダークで別値）
+      if (hr > 3 && (fromRank - 1 + globalIdx) % 2 === 1) {
+        ctx.fillStyle = pal.rowOddBg;
+        ctx.fillRect(gx, rowY, groupW, rowH);
       }
 
-      rx += colWidths[ci];
+      ctx.font = font;
+      let rx = gx + padX;
+
+      allCols.forEach((k, ci) => {
+        const tx = rx + 4;
+
+        if (k === '_rank') {
+          // 表示順位（連番）— .cell-rank は --md-on-surface-variant (textMuted)
+          ctx.fillStyle = pal.textMuted;
+          ctx.fillText(String(fromRank + globalIdx), tx, textY);
+
+        } else if (k === 'honorRank') {
+          // 増加量順位：top3はメダル色
+          ctx.fillStyle = hr === 1 ? colorWarn : hr === 2 ? '#c0c0c0' : hr === 3 ? '#cd7c32' : pal.textMain;
+          ctx.fillText(String(hr < 999 ? hr : fromRank + globalIdx), tx, textY);
+
+        } else if (k === 'rank') {
+          // .cell-rank は --md-on-surface-variant (textMuted)
+          ctx.fillStyle = pal.textMuted;
+          ctx.fillText(String(p.rank ?? '-'), tx, textY);
+
+        } else if (k === 'rankChange') {
+          // ▲▼→NEW — サイトの formatChange と完全一致
+          if (p.prevRank == null) {
+            ctx.fillStyle = colorSuccess;
+            ctx.fillText('NEW', tx, textY);
+          } else {
+            const rc = p.rankChange ?? 0;
+            if (rc > 0) {
+              ctx.fillStyle = colorUp; // .up = --md-primary = elemColor
+              ctx.fillText(`▲${rc}`, tx, textY);
+            } else if (rc < 0) {
+              ctx.fillStyle = colorDown;
+              ctx.fillText(`▼${Math.abs(rc)}`, tx, textY);
+            } else {
+              ctx.fillStyle = pal.textMuted;
+              ctx.fillText('→', tx, textY);
+            }
+          }
+
+        } else if (k === 'username') {
+          const isSolo = showSoloIcon && getSoloMatch(p) != null;
+          if (isSolo) {
+            ctx.fillStyle = colorErr;
+            const tag = '[S] ';
+            ctx.fillText(tag, tx, textY);
+            ctx.fillStyle = pal.colorGN;
+            ctx.fillText(p.username ?? '', tx + ctx.measureText(tag).width, textY);
+          } else {
+            ctx.fillStyle = pal.colorGN;
+            ctx.fillText(p.username ?? '', tx, textY);
+          }
+
+        } else if (k === 'killDiff') {
+          // .cell-kill は --md-on-surface-variant (textMuted)
+          const kv = p.killDiff ?? 0;
+          ctx.fillStyle = pal.textMuted;
+          ctx.fillText(kv > 0 ? '+' + numFmt(kv) : kv === 0 ? '-' : numFmt(kv), tx, textY);
+
+        } else if (k === 'honorDiff') {
+          // diffColor と同じロジック（サイトの renderRanking と一致）
+          ctx.fillStyle = hr === 1 ? colorWarn : hr === 2 ? '#c0c0c0' : hr === 3 ? '#cd7c32'
+                        : (p.honorDiff ?? 0) > 0 ? pal.textMain : pal.textMuted;
+          const sign = (p.honorDiff ?? 0) > 0 ? '+' : '';
+          ctx.fillText(sign + numFmt(p.honorDiff ?? 0), tx, textY);
+
+        } else if (k === 'honor') {
+          ctx.fillStyle = pal.textMain;
+          ctx.fillText(p.honor != null ? numFmt(p.honor) : '-', tx, textY);
+
+        } else {
+          ctx.fillStyle = pal.textMain;
+          ctx.fillText(p[k] != null ? String(p[k]) : '', tx, textY);
+        }
+
+        rx += colWidths[ci];
+      });
+
+      // 行区切り
+      ctx.strokeStyle = pal.outlineVar;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(gx, rowY + rowH); ctx.lineTo(gx + groupW, rowY + rowH); ctx.stroke();
     });
 
-    // 行区切り
-    ctx.strokeStyle = outlineVar;
-    ctx.lineWidth = 0.5;
-    ctx.beginPath(); ctx.moveTo(0, rowY + rowH); ctx.lineTo(totalW, rowY + rowH); ctx.stroke();
-  });
+    // 縦区切り線（列内）
+    let cx2 = gx + padX;
+    for (let ci = 0; ci < allCols.length - 1; ci++) {
+      cx2 += colWidths[ci];
+      ctx.strokeStyle = pal.outlineVar;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(cx2, padY + titleH); ctx.lineTo(cx2, totalH - footerH - padY); ctx.stroke();
+    }
 
-  // 縦区切り線
-  cx = padX;
-  for (let ci = 0; ci < allCols.length - 1; ci++) {
-    cx += colWidths[ci];
-    ctx.strokeStyle = outlineVar;
-    ctx.lineWidth = 0.5;
-    ctx.beginPath(); ctx.moveTo(cx, padY + titleH); ctx.lineTo(cx, totalH - footerH - padY); ctx.stroke();
-  }
+    // グループ間の仕切り線
+    if (gi < groups.length - 1) {
+      const dividerX = gx + groupW + groupGap / 2;
+      ctx.strokeStyle = pal.outlineVar;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(dividerX, padY + titleH); ctx.lineTo(dividerX, totalH - footerH - padY); ctx.stroke();
+    }
+  });
 
   // ---- フッター ----
   const footerY = totalH - padY / 2 - 2;
   // gbfranking.com（左下 — shareGraph と同じ位置）
   ctx.font = fontSm;
-  ctx.fillStyle = textMuted;
+  ctx.fillStyle = pal.textMuted;
   ctx.fillText('gbfranking.com', padX, footerY);
   // [S] 凡例（右側）— showSoloIcon 時のみ
   if (showSoloIcon) {
@@ -2183,7 +2265,7 @@ function execSavePNG() {
     ctx.fillStyle = colorErr;
     ctx.fillText('[S]', lx, footerY);
     lx += ctx.measureText('[S]').width;
-    ctx.fillStyle = textMuted;
+    ctx.fillStyle = pal.textMuted;
     ctx.fillText(legend, lx, footerY);
   }
 
@@ -2284,8 +2366,18 @@ function updateEventDaySelect(selectedDate) {
   const dates = buildEventDateList();
   sel.innerHTML = '<option value="">-- 日付を選択 --</option>';
   const isMobileDaySel = window.innerWidth < 640;
+  // 残業タブ（24:00〜7:00の集計）は、その日の深夜帯が前日のGBF日に属するため、
+  // 正午ではなく深夜の代表時刻で期間名を判定する（例: 09-22の残業→予選1日目扱い）。
+  // イベント開始日そのもの（例: 09-21）には「開始前の深夜帯」が存在しないため一覧から除外する。
+  const isOvernight = currentTab === 'overnight';
+  const refTime = isOvernight ? ' 03:00:00' : ' 12:00:00';
+  // 朝活(7:00〜8:00)・日速(7:00〜24:00)は、予選1日目が19:00開始のため7:00時点のデータが存在せず、
+  // イベント終了後も永久に空になる。予選1日目自体を一覧から除外する。
+  const excludeDay1 = currentTab === 'morning' || currentTab === 'daily';
   dates.forEach(d => {
-    const period = getGBFPeriodName(d + ' 12:00:00', startDate);
+    const period = getGBFPeriodName(d + refTime, startDate);
+    if (isOvernight && period === '開始前') return;
+    if (excludeDay1 && d === startDate) return;
     const shortD = d.substring(5).replace('-', '/');
     const label = isMobileDaySel ? shortD : `[${period}] ${d}`;
     sel.innerHTML += `<option value="${d}"${d === selectedDate ? ' selected' : ''}>${label}</option>`;
@@ -2437,6 +2529,7 @@ function onColDragEnd(e) {
 let sortKey  = 'honorDiff';
 let sortDir  = -1;
 let currentRenderData = null;
+let _reloadSeq = 0;
 
 function sortBy(key) {
   if (sortKey === key) { sortDir = -sortDir; }
@@ -2527,7 +2620,13 @@ async function init() {
     applyElementTheme(defaultEvent.name || '');
   }
 
-  const today       = new Date().toLocaleDateString('sv-SE');
+  // GBF日は7:00始まりのため、日付が変わった直後(0:00〜6:59)はまだ「前日のGBF日」の途中。
+  // 単純な暦日だと、この時間帯に開いた時「今日」が始まったばかりの空データになり、
+  // ちょうど終わったばかりの前日分の日速等が一見「出ていない」ように見えてしまう。
+  const now         = new Date();
+  const gbfNow      = new Date(now);
+  if (now.getHours() < 7) gbfNow.setDate(gbfNow.getDate() - 1);
+  const today       = gbfNow.toLocaleDateString('sv-SE');
   const clamped     = clampDate(today);
   document.getElementById('date-select').value = clamped;
   currentDate = clamped;
@@ -2563,6 +2662,12 @@ if (window.__STATIC_MODE__) {
 
 async function loadEvents() {
   loadedEvents = await apiFetch('/api/ranking/events') || [];
+  // 初回ロード（特にサーバーが更新処理中に強制reloadで開いた場合）は1回失敗しただけで
+  // イベント一覧が空のまま何も表示されなくなってしまうため、1回だけ間を置いて再試行する。
+  if (loadedEvents.length === 0 && !window.__STATIC_MODE__) {
+    await new Promise(r => setTimeout(r, 2000));
+    loadedEvents = await apiFetch('/api/ranking/events') || [];
+  }
 
   // 静的モード: インデックスの events.json から最新イベント一覧を動的取得
   if (window.__STATIC_MODE__ && window.__STATIC_INDEX_URL__) {
@@ -2630,25 +2735,30 @@ function applyElementTheme(eventName) {
   }
 }
 
-// ===== 注目プレイヤー =====
-const watchedNames = (() => {
-  try { return new Set(JSON.parse(localStorage.getItem('gbf_watched') || '[]')); }
-  catch { return new Set(); }
+// ===== 注目プレイヤー（player_id基準で管理。同じGNの別プレイヤーと取り違えないようIDで識別する） =====
+// Map<player_id, 最後に確認できたusername>（圏外時の表示名フォールバック用にusernameもキャッシュ）
+const watchedPlayers = (() => {
+  try {
+    const raw = JSON.parse(localStorage.getItem('gbf_watched_ids') || '[]');
+    return new Map(raw.map(entry => Array.isArray(entry) ? [Number(entry[0]), entry[1]] : [Number(entry), String(entry)]));
+  } catch { return new Map(); }
 })();
 
 function saveWatched() {
-  try { localStorage.setItem('gbf_watched', JSON.stringify([...watchedNames])); } catch {}
+  try { localStorage.setItem('gbf_watched_ids', JSON.stringify([...watchedPlayers.entries()])); } catch {}
 }
 
-function toggleWatch(e, username) {
+function toggleWatch(e, playerId, username) {
   e.stopPropagation();
-  if (watchedNames.has(username)) watchedNames.delete(username);
-  else watchedNames.add(username);
+  const id = Number(playerId);
+  if (isNaN(id)) return;
+  if (watchedPlayers.has(id)) watchedPlayers.delete(id);
+  else watchedPlayers.set(id, username);
   saveWatched();
   // 全行の★更新
   document.querySelectorAll('.watch-star').forEach(btn => {
-    const un = btn.dataset.un;
-    if (un) { btn.classList.toggle('on', watchedNames.has(un)); }
+    const pid = Number(btn.dataset.pid);
+    if (!isNaN(pid)) { btn.classList.toggle('on', watchedPlayers.has(pid)); }
   });
   updateWatchPanel(currentRenderData);
 }
@@ -2657,20 +2767,22 @@ function updateWatchPanel(data) {
   const card  = document.getElementById('side-watch-card');
   const listEl = document.getElementById('side-watch-list');
   if (!card || !listEl) return;
-  if (watchedNames.size === 0) { card.style.display = 'none'; return; }
+  if (watchedPlayers.size === 0) { card.style.display = 'none'; return; }
   card.style.display = '';
   const players = (data && data.players) ? data.players : [];
 
   // 選択タブの速度順位で昇順ソート（圏外は末尾）
-  const sortedNames = [...watchedNames].sort((a, b) => {
-    const pa = players.find(pl => pl.username === a);
-    const pb = players.find(pl => pl.username === b);
+  const sortedIds = [...watchedPlayers.keys()].sort((a, b) => {
+    const pa = players.find(pl => pl.player_id === a);
+    const pb = players.find(pl => pl.player_id === b);
     return (pa?.honorRank ?? Infinity) - (pb?.honorRank ?? Infinity);
   });
 
-  const html = sortedNames.map(name => {
-    const p = players.find(pl => pl.username === name);
-    if (!p) return `<div class="side-watch-row" style="flex-direction:column;padding:4px 0"><div style="display:flex;align-items:center;gap:4px;width:100%;min-width:0"><span style="flex:1;font-size:12px;color:var(--md-on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(name)}</span><span style="font-size:10px;color:var(--md-on-surface-variant);opacity:0.5">圏外</span><button onclick="removeWatchedPlayer(event,'${escHtml(name)}')" style="background:none;border:none;color:var(--md-on-surface-variant);cursor:pointer;font-size:13px;padding:0 0 0 4px;line-height:1;flex-shrink:0;opacity:0.5;transition:opacity var(--md-duration-short) var(--md-ease)" onmouseenter="this.style.opacity='1';this.style.color='var(--md-error)'" onmouseleave="this.style.opacity='0.5';this.style.color='var(--md-on-surface-variant)'" title="削除">✕</button></div></div>`;
+  const html = sortedIds.map(id => {
+    const p = players.find(pl => pl.player_id === id);
+    const name = p ? p.username : (watchedPlayers.get(id) || `ID:${id}`);
+    if (p && p.username !== watchedPlayers.get(id)) { watchedPlayers.set(id, p.username); saveWatched(); } // 改名を追従
+    if (!p) return `<div class="side-watch-row" style="flex-direction:column;padding:4px 0"><div style="display:flex;align-items:center;gap:4px;width:100%;min-width:0"><span style="flex:1;font-size:12px;color:var(--md-on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(name)}</span><span style="font-size:10px;color:var(--md-on-surface-variant);opacity:0.5">圏外</span><button onclick="removeWatchedPlayer(event,${id})" style="background:none;border:none;color:var(--md-on-surface-variant);cursor:pointer;font-size:13px;padding:0 0 0 4px;line-height:1;flex-shrink:0;opacity:0.5;transition:opacity var(--md-duration-short) var(--md-ease)" onmouseenter="this.style.opacity='1';this.style.color='var(--md-error)'" onmouseleave="this.style.opacity='0.5';this.style.color='var(--md-on-surface-variant)'" title="削除">✕</button></div></div>`;
 
     // 速度順位（ラベルなし）
     const spd = p.honorRank != null ? `${p.honorRank}位` : '';
@@ -2694,7 +2806,7 @@ function updateWatchPanel(data) {
       <div style="display:flex;align-items:center;gap:4px;width:100%;min-width:0">
         <span style="flex:1;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(name)}</span>
         ${p.honorDiff > 0 ? `<span style="color:#4ade80;font-size:11px;flex-shrink:0">+${numFmt(p.honorDiff)}</span>` : ''}
-        <button onclick="removeWatchedPlayer(event,'${escHtml(name)}')" style="background:none;border:none;color:var(--md-on-surface-variant);cursor:pointer;font-size:13px;padding:0 0 0 4px;line-height:1;flex-shrink:0;opacity:0.5;transition:opacity var(--md-duration-short) var(--md-ease)" onmouseenter="this.style.opacity='1';this.style.color='var(--md-error)'" onmouseleave="this.style.opacity='0.5';this.style.color='var(--md-on-surface-variant)'" title="削除">✕</button>
+        <button onclick="removeWatchedPlayer(event,${id})" style="background:none;border:none;color:var(--md-on-surface-variant);cursor:pointer;font-size:13px;padding:0 0 0 4px;line-height:1;flex-shrink:0;opacity:0.5;transition:opacity var(--md-duration-short) var(--md-ease)" onmouseenter="this.style.opacity='1';this.style.color='var(--md-error)'" onmouseleave="this.style.opacity='0.5';this.style.color='var(--md-on-surface-variant)'" title="削除">✕</button>
       </div>
       <div style="font-size:10px;color:var(--md-on-surface-variant);line-height:1.5">${statsLine}</div>
     </div>`;
@@ -2702,14 +2814,14 @@ function updateWatchPanel(data) {
   listEl.innerHTML = html;
 }
 
-function removeWatchedPlayer(e, username) {
+function removeWatchedPlayer(e, playerId) {
   e.stopPropagation();
-  watchedNames.delete(username);
+  watchedPlayers.delete(Number(playerId));
   saveWatched();
   // テーブル内の★も連動して更新
   document.querySelectorAll('.watch-star').forEach(btn => {
-    const un = btn.dataset.un;
-    if (un) btn.classList.toggle('on', watchedNames.has(un));
+    const pid = Number(btn.dataset.pid);
+    if (!isNaN(pid)) btn.classList.toggle('on', watchedPlayers.has(pid));
   });
   const row = e.target.closest('.side-watch-row');
   if (row) {
@@ -2797,13 +2909,12 @@ function connectLiveSSE() {
         return;
       }
       if (currentEventId && String(info.eventId) !== String(currentEventId)) return;
-      apiCacheInvalidate('/api/ranking/latest');
-      apiCacheInvalidate('/api/ranking/snapshots');
-      apiCacheInvalidate('/api/ranking/20min');
-      apiCacheInvalidate('/api/ranking/daily');
-      flashOnRender = true;
-      reload();
-      if (currentTab === '20min') updateSnapList();
+      // kind未指定（過渡期など）は安全側に倒して従来通りreloadする。
+      // 明示的にkindが付いていて'ranking'を含まない場合（団・ボーダー単体更新）のみスキップする。
+      if (info.kind && !String(info.kind).includes('ranking')) return;
+      // ランキングは常に表示し続けたいので、ページ全体のreloadはしない。
+      // 同時視聴者が一斉にfetchしてトンネルへの同時接続が殺到しないよう、時間的にならす。
+      setTimeout(backgroundUpdate, Math.random() * 8000);
     } catch {}
   };
   liveSSE.onerror = () => {
@@ -2866,6 +2977,15 @@ function renderDaySelect(selectedDay) {
   });
 }
 
+// 全件が推定値のスナップショットは、信頼できる順位付けができないためランキング表には出さない
+// （個々人のグラフ・ボーダーグラフには影響しない＝snapGroups/allSnaps自体はそのまま残す）
+function isFullyEstimatedSnap(s) {
+  return s.estimated_count != null && s.player_count > 0 && s.estimated_count >= s.player_count;
+}
+function viewableDaySnaps(gbfDay) {
+  return (snapGroups[gbfDay] || []).filter(s => !isFullyEstimatedSnap(s));
+}
+
 function renderTimeSelect(gbfDay, selectedSnapId) {
   const sel = document.getElementById('snap-time-select');
   if (!sel) return;
@@ -2878,9 +2998,10 @@ function renderTimeSelect(gbfDay, selectedSnapId) {
   sel.disabled = false;
   sel.style.opacity = '';
   sel.innerHTML = '<option value="">-- この日の最新 --</option>';
-  (snapGroups[gbfDay] || []).forEach(s => {
+  viewableDaySnaps(gbfDay).forEach(s => {
     const time = s.captured_at.substring(11, 19);
-    sel.innerHTML += `<option value="${s.id}"${String(s.id) === String(selectedSnapId) ? ' selected' : ''}>${time} (${s.player_count}件)</option>`;
+    const estTag = s.estimated_count > 0 ? ` [一部推定:${s.estimated_count}件]` : '';
+    sel.innerHTML += `<option value="${s.id}"${String(s.id) === String(selectedSnapId) ? ' selected' : ''}>${time} (${s.player_count}件)${estTag}</option>`;
   });
 }
 
@@ -2908,7 +3029,7 @@ async function loadCurrentSnap() {
   if (snapId) {
     data = await apiFetch(`/api/ranking/20min?snapshot_id=${snapId}`);
   } else if (gbfDay) {
-    const daySnaps = snapGroups[gbfDay] || [];
+    const daySnaps = viewableDaySnaps(gbfDay);
     if (daySnaps.length > 0) {
       data = await apiFetch(`/api/ranking/20min?snapshot_id=${daySnaps[0].id}`);
     } else {
@@ -2945,24 +3066,22 @@ function shiftSnap(dir) {
   if (snapId) {
     curGlobalIdx = allSnaps.findIndex(s => String(s.id) === String(snapId));
   } else if (gbfDay) {
-    const daySnaps = snapGroups[gbfDay] || [];
+    const daySnaps = viewableDaySnaps(gbfDay);
     if (daySnaps.length > 0) {
       curGlobalIdx = allSnaps.findIndex(s => s.id === daySnaps[0].id);
     }
   }
 
+  // 全件推定のスナップショットは順位表示の対象外なので、その分はさらに1つ先/前へ進める
   if (dir === -1) {
-    if (curGlobalIdx === -1) {
-      syncSnapshotSelection(0);
-    } else if (curGlobalIdx < allSnaps.length - 1) {
-      syncSnapshotSelection(curGlobalIdx + 1);
-    }
+    let idx = curGlobalIdx === -1 ? 0 : curGlobalIdx + 1;
+    while (idx < allSnaps.length && isFullyEstimatedSnap(allSnaps[idx])) idx++;
+    if (idx < allSnaps.length) syncSnapshotSelection(idx);
   } else {
-    if (curGlobalIdx <= 0) {
-      clearSnapSelect();
-    } else {
-      syncSnapshotSelection(curGlobalIdx - 1);
-    }
+    let idx = curGlobalIdx - 1;
+    while (idx >= 0 && isFullyEstimatedSnap(allSnaps[idx])) idx--;
+    if (idx < 0) { clearSnapSelect(); }
+    else syncSnapshotSelection(idx);
   }
 }
 
@@ -3048,42 +3167,80 @@ function clearSnapSelect() {
   reload();
 }
 
+async function fetchRankingData() {
+  if (currentTab === '20min') {
+    const gbfDay = document.getElementById('snap-day-select')?.value || '';
+    const snapId = document.getElementById('snap-time-select')?.value || '';
+    if (gbfDay) await ensureSnapDayLoaded(gbfDay);
+    if (snapId) {
+      return await apiFetch(`/api/ranking/20min?snapshot_id=${snapId}`);
+    } else if (gbfDay) {
+      const daySnaps = snapGroups[gbfDay] || [];
+      if (daySnaps.length > 0) {
+        return await apiFetch(`/api/ranking/20min?snapshot_id=${daySnaps[0].id}`);
+      }
+      return null;
+    } else {
+      return await apiFetch(`/api/ranking/latest?event_id=${currentEventId}`);
+    }
+  } else {
+    const ep = { morning: 'morning', daily: 'daily', overnight: 'overnight' }[currentTab];
+    if (!ep) return null;
+    // 集計タブは日別ファイル(snap-DATE.json.gz)へ分離済み → 静的モードでは当日分を遅延ロード
+    const aggDay = currentDate || snapDayList[snapDayList.length - 1] || '';
+    if (aggDay) await ensureSnapDayLoaded(aggDay);
+    const url = `/api/ranking/${ep}?event_id=${currentEventId}${currentDate ? `&date=${currentDate}` : ''}`;
+    return await apiFetch(url);
+  }
+}
+
 async function reload() {
+  const mySeq = ++_reloadSeq;
   currentDate = document.getElementById('date-select').value;
   if (!currentEventId) { showNoData('イベントを選択してください'); return; }
+
   showLoading();
+
   let data = null;
   try {
-    if (currentTab === '20min') {
-      const gbfDay = document.getElementById('snap-day-select')?.value || '';
-      const snapId = document.getElementById('snap-time-select')?.value || '';
-      if (gbfDay) await ensureSnapDayLoaded(gbfDay);
-      if (snapId) {
-        data = await apiFetch(`/api/ranking/20min?snapshot_id=${snapId}`);
-      } else if (gbfDay) {
-        const daySnaps = snapGroups[gbfDay] || [];
-        if (daySnaps.length > 0) {
-          data = await apiFetch(`/api/ranking/20min?snapshot_id=${daySnaps[0].id}`);
-        }
-      } else {
-        data = await apiFetch(`/api/ranking/latest?event_id=${currentEventId}`);
-      }
-    } else {
-      const ep = { morning: 'morning', daily: 'daily', overnight: 'overnight' }[currentTab];
-      if (ep) {
-        // 集計タブは日別ファイル(snap-DATE.json.gz)へ分離済み → 静的モードでは当日分を遅延ロード
-        const aggDay = currentDate || snapDayList[snapDayList.length - 1] || '';
-        if (aggDay) await ensureSnapDayLoaded(aggDay);
-        const url = `/api/ranking/${ep}?event_id=${currentEventId}${currentDate ? `&date=${currentDate}` : ''}`;
-        data = await apiFetch(url);
-      }
+    data = await fetchRankingData();
+    // Cloudflare Tunnel経由だと単発リクエストが低確率で接続断になることがあるため、1回だけ間を置いて再試行する。
+    if (data == null) {
+      await new Promise(r => setTimeout(r, 1200));
+      if (mySeq === _reloadSeq) data = await fetchRankingData();
     }
   } catch (err) {
     console.error('[reload]', err);
   }
+
+  if (mySeq !== _reloadSeq) return; // より新しいreload()に追い越された場合は破棄
+
   try { renderRanking(data); } catch (e) {
     console.error('[renderRanking]', e);
     showNoData('表示エラー: ' + (e.message || e));
+  }
+}
+
+// 自動更新（SSE通知／定期ポーリング）専用。手動reload()と違いブランクにしない・失敗しても
+// 何もしない（直前の表示をそのまま維持する）。「ランキングは常に表示しておきたい」という
+// 要望に合わせ、更新に失敗しても画面が固まったり消えたりしないようにするための経路。
+async function backgroundUpdate() {
+  if (!currentEventId) return;
+  const mySeq = ++_reloadSeq;
+  let data = null;
+  try {
+    data = await fetchRankingData();
+    if (data == null) {
+      await new Promise(r => setTimeout(r, 1200));
+      if (mySeq === _reloadSeq) data = await fetchRankingData();
+    }
+  } catch (err) {
+    console.error('[backgroundUpdate]', err);
+  }
+  if (mySeq !== _reloadSeq) return; // 追い越されたら破棄
+  if (data == null) return; // 取得失敗時は直前の表示をそのまま維持（ブランクにしない）
+  try { renderRanking(data); } catch (e) {
+    console.error('[renderRanking]', e);
   }
 }
 
@@ -3091,10 +3248,10 @@ const TYPE_META = {
   '20分速':       { label: '20分速', cls: 'type-20min',     desc: '直前 → 最新スナップ' },
   '朝活':         { label: '朝活',   cls: 'type-morning',   desc: '7:00 → 8:00' },
   '朝活(進行中)': { label: '朝活',   cls: 'type-morning',   desc: '7:00 → 最新' },
-  '日速':         { label: '日速',   cls: 'type-daily',     desc: '7:00 → 0:00' },
+  '日速':         { label: '日速',   cls: 'type-daily',     desc: '7:00 → 24:00' },
   '日速(進行中)': { label: '日速',   cls: 'type-daily',     desc: '7:00 → 最新' },
-  '残業':         { label: '残業',   cls: 'type-overnight', desc: '0:00 → 7:00' },
-  '残業(進行中)': { label: '残業',   cls: 'type-overnight', desc: '0:00 → 最新' },
+  '残業':         { label: '残業',   cls: 'type-overnight', desc: '24:00 → 7:00' },
+  '残業(進行中)': { label: '残業',   cls: 'type-overnight', desc: '24:00 → 最新' },
 };
 
 function renderRanking(data, keepScroll = false) {
@@ -3137,8 +3294,11 @@ function renderRanking(data, keepScroll = false) {
     honorRankMap.get(p.player_id != null ? `id:${p.player_id}` : `nm:${p.username}`) || 999;
 
   statBar.style.display = 'flex';
-  const bef = data.before ? data.before.substring(0, 16) : '?';
-  const aft = data.after  ? data.after.substring(0, 16)  : '?';
+  // 団ランキングと同じ表記（年省略・同日ならafter側は時刻のみ）
+  const fmtRange = s => s ? s.substring(5, 16) : '?';
+  const sameDayRange = data.before && data.after && data.before.substring(0, 10) === data.after.substring(0, 10);
+  const bef = fmtRange(data.before);
+  const aft = sameDayRange ? (data.after ? data.after.substring(11, 16) : '?') : fmtRange(data.after);
   document.getElementById('stat-range').textContent = `${bef} → ${aft}`;
   const active   = data.players.filter(p => p.honorDiff > 0);
   const topHonor = Math.max(0, ...active.map(p => p.honorDiff));
@@ -3148,11 +3308,13 @@ function renderRanking(data, keepScroll = false) {
   const badgeEl = document.getElementById('type-badge-label');
   badgeEl.textContent = meta.label;
   badgeEl.className   = `type-badge ${meta.cls}`;
-  // タブのサブテキストを更新（日速・朝活）
+  // タブのサブテキストを更新（日速・朝活・残業。20分速は団ランキングと同じ「直近の速度」で固定）
   const dailySubEl = document.getElementById('tab-daily-sub');
-  if (dailySubEl && data.type === '日速') dailySubEl.textContent = data.isLive ? '7:00→最新' : '7:00→0:00';
+  if (dailySubEl && data.type === '日速') dailySubEl.textContent = data.isLive ? '7:00→最新' : '7:00→24:00';
   const morningSubEl = document.getElementById('tab-morning-sub');
   if (morningSubEl && data.type === '朝活') morningSubEl.textContent = data.isLive ? '7:00→最新' : '7:00→8:00';
+  const overnightSubEl = document.getElementById('tab-overnight-sub');
+  if (overnightSubEl && data.type === '残業') overnightSubEl.textContent = data.isLive ? '24:00→最新' : '24:00→7:00';
 
   // 更新中バッジ: afterPlayerCount が 1万未満なら表示
   const updBadge = document.getElementById('updating-badge');
@@ -3164,6 +3326,7 @@ function renderRanking(data, keepScroll = false) {
       const phase = cnt < 200 ? '1/4' : cnt < 1100 ? '2/4' : cnt < 2100 ? '3/4' : '4/4';
       updBadge.textContent = `更新中 ${cnt}→10000件 (Phase ${phase})`;
       updBadge.style.display = '';
+      updBadgeShownAt = Date.now(); // 「まだ進行中」と新鮮なデータで確認できた時刻を更新
     } else {
       updBadge.style.display = 'none';
     }
@@ -3194,10 +3357,11 @@ function renderRanking(data, keepScroll = false) {
     const gnCls  = bInfo ? ' gn-pinned' : '';
     const gnCol  = bInfo ? ` style="color:${bInfo.color}"` : '';
     const histBtn = `<span style="cursor:pointer;color:var(--md-on-surface-variant);font-size:10px;margin-right:3px" onclick="event.stopPropagation();openPlayerModal(${p.player_id ?? 'null'},${escHtml(JSON.stringify(p.username))},${currentEventId})" title="履歴を見る">📋</span>`;
-    const starBtn = `<button class="watch-star${watchedNames.has(p.username)?' on':''}" data-un="${escHtml(p.username)}" onclick="toggleWatch(event,${escHtml(JSON.stringify(p.username))})" title="${watchedNames.has(p.username)?'注目解除':'注目に追加'}">★</button>`;
+    const starBtn = p.player_id == null ? '' : `<button class="watch-star${watchedPlayers.has(p.player_id)?' on':''}" data-pid="${p.player_id}" onclick="toggleWatch(event,${p.player_id},${escHtml(JSON.stringify(p.username))})" title="${watchedPlayers.has(p.player_id)?'注目解除':'注目に追加'}">★</button>`;
     const _soloMatch = getSoloMatch(p);
     const soloMark = _soloMatch ? `<span class="solo-mark" title="推定ソロ: ${_soloMatch}">S</span>` : '';
-    const gnCell = `${markEl}${soloMark}${histBtn}<span class="gn-clickable${gnCls}"${gnCol} onclick="toggleBattlePlayer(${p.player_id ?? 'null'},${escHtml(JSON.stringify(p.username))})">${escHtml(p.username)}</span>${profileLink}${starBtn}`;
+    const estMark = p.isEstimated ? `<span title="取得漏れのため前後データから算出した推定値です" style="color:#fbbf24;font-size:9px;border:1px solid #fbbf24;border-radius:3px;padding:0 2px;margin-right:2px">推定</span>` : '';
+    const gnCell = `${markEl}${soloMark}${estMark}${histBtn}<span class="gn-clickable${gnCls}"${gnCol} onclick="toggleBattlePlayer(${p.player_id ?? 'null'},${escHtml(JSON.stringify(p.username))})">${escHtml(p.username)}</span>${profileLink}${starBtn}`;
 
     const cells = {
       honorRank:  `<td class="cell-r">${honorRank <= 3 ? `<span class="medal-${honorRank}">${honorRank}</span>` : honorRank}</td>`,
@@ -3318,10 +3482,21 @@ function startAutoRefresh() {
   if (autoTimer) clearInterval(autoTimer);
   if (currentEventIsDemo || window.__STATIC_MODE__) return;
   autoTimer = setInterval(() => {
-    apiCacheInvalidate();
-    reload();
+    // 同時視聴者が一斉にfetchしてトンネルへの同時接続が殺到しないよう、時間的にならす。
+    setTimeout(backgroundUpdate, Math.random() * 8000);
   }, 5 * 60 * 1000);
 }
+
+// 「更新中」バッジの陳腐化監視。backgroundUpdate()が更新失敗を繰り返して再描画されないと、
+// 実際は更新が終わっているのにバッジだけ「更新中」のまま置き去りになることがあったため、
+// 直近に進行中と確認できてから一定時間（8分）経ってもバッジが消えていなければ強制的に隠す。
+setInterval(() => {
+  const updBadge = document.getElementById('updating-badge');
+  if (!updBadge || updBadge.style.display === 'none') return;
+  if (updBadgeShownAt && Date.now() - updBadgeShownAt > 8 * 60 * 1000) {
+    updBadge.style.display = 'none';
+  }
+}, 30 * 1000);
 
 async function openPlayerModal(playerId, username, eventId) {
   const modal = document.getElementById('player-modal');
@@ -3364,6 +3539,7 @@ async function openPlayerModal(playerId, username, eventId) {
         honor_diff:  p.honorDiff,
         kill_count:  p.kill_count ?? null,
         kill_diff:   p.killDiff,
+        is_estimated: !!p.isEstimated,
       });
     }
     // ※ 20分速データは既に前スナップとの差分を持つため追加計算不要
@@ -3402,8 +3578,10 @@ async function openPlayerModal(playerId, username, eventId) {
     const rank20Clr = h.rank_20min != null && h.rank_20min <= 10 ? '#facc15' : '#94a3b8';
     const rank20Wt  = h.rank_20min != null && h.rank_20min <= 3  ? 700 : 400;
     const timeStr   = escHtml((h.captured_at || '').substring(0, 16)); // 秒数削除
-    return `<tr>
-      <td>${timeStr}</td>
+    const isEst     = !!(h.is_estimated || h.isEstimated);
+    const estTag    = isEst ? ' <span title="取得漏れのため前後の順位から算出した推定値です" style="color:#fbbf24;font-size:10px;border:1px solid #fbbf24;border-radius:3px;padding:0 3px">推定</span>' : '';
+    return `<tr${isEst ? ' style="opacity:0.75"' : ''}>
+      <td>${timeStr}${estTag}</td>
       <td style="color:${rank20Clr};font-weight:${rank20Wt}">${rank20}</td>
       <td>${h.rank || '-'}</td>
       <td style="color:${killColor}">${killStr}</td>
@@ -3565,12 +3743,11 @@ function addBattlePlayersToGraph() {
 
 function addWatchedPlayersToGraph() {
   const pool = currentRenderData?.players || window._lastRankingPlayers || [];
-  for (const username of watchedNames) {
-    const key = String(username);
-    if (graphPlayers.find(p => String(p.id ?? p.name) === key || p.name === username)) continue;
-    const found = pool.find(p => p.username === username);
+  for (const [id, cachedName] of watchedPlayers) {
+    if (graphPlayers.find(p => String(p.id ?? p.name) === String(id))) continue;
+    const found = pool.find(p => p.player_id === id);
     const color = GRAPH_COLORS[graphPlayers.length % GRAPH_COLORS.length];
-    graphPlayers.push({ id: found?.player_id ?? null, name: username, color });
+    graphPlayers.push({ id, name: found?.username ?? cachedName, color });
   }
   updateGraphPlayerTags();
   renderGraph();
@@ -3631,16 +3808,17 @@ function updateGraphPlayerTags() {
     el.innerHTML = '<span style="font-size:11px;color:var(--md-on-surface-variant)">バトルバーまたは下の検索からプレイヤーを追加</span>';
     return;
   }
-  el.innerHTML = graphPlayers.map(p =>
-    `<span class="graph-player-tag" style="color:${p.color};border-color:${p.color};background:${p.color}18"
+  el.innerHTML = graphPlayers.map(p => {
+    const label = p.name ? escHtml(p.name) : `(GN未設定 ID:${p.id})`;
+    return `<span class="graph-player-tag" style="color:${p.color};border-color:${p.color};background:${p.color}18"
       onmouseenter="highlightGraphLine('${escHtml(p.name)}')"
       onmouseleave="unhighlightGraphLine()"
       ontouchstart="highlightGraphLine('${escHtml(p.name)}')"
       ontouchend="unhighlightGraphLine()"
-    ><span style="pointer-events:none">${escHtml(p.name)}</span
+    ><span style="pointer-events:none">${label}</span
     ><span onclick="event.stopPropagation();toggleGraphPlayer(${p.id != null ? p.id : 'null'},'${escHtml(p.name)}')"
-      style="margin-left:5px;opacity:0.7;font-size:11px;cursor:pointer;padding:0 2px">✕</span></span>`
-  ).join('');
+      style="margin-left:5px;opacity:0.7;font-size:11px;cursor:pointer;padding:0 2px">✕</span></span>`;
+  }).join('');
 }
 
 // ---- 期間セレクト ----
@@ -3661,13 +3839,17 @@ function onGraphPlayerSearch() {
   const q = (document.getElementById('graph-player-search').value || '').trim().toLowerCase();
   const sug = document.getElementById('graph-player-suggest');
   if (!q) { sug.style.display = 'none'; return; }
-  // 現在のランキングデータからプレイヤー名を検索
+  // 現在のランキングデータからプレイヤー名を検索（GN空白のプレイヤーはIDでも検索可能にする）
   const all = window._lastRankingPlayers || [];
-  const hits = all.filter(p => (p.username || '').toLowerCase().includes(q)).slice(0, 10);
+  const hits = all.filter(p =>
+    (p.username || '').toLowerCase().includes(q) ||
+    (p.player_id != null && String(p.player_id).includes(q))
+  ).slice(0, 10);
   if (!hits.length) { sug.style.display = 'none'; return; }
-  sug.innerHTML = hits.map(p =>
-    `<div class="graph-suggest-item" onmousedown="addGraphPlayerFromSuggest(${p.player_id ?? 'null'},'${escHtml(p.username)}')">${escHtml(p.username)}</div>`
-  ).join('');
+  sug.innerHTML = hits.map(p => {
+    const label = p.username ? escHtml(p.username) : `(GN未設定 ID:${p.player_id})`;
+    return `<div class="graph-suggest-item" onmousedown="addGraphPlayerFromSuggest(${p.player_id ?? 'null'},'${escHtml(p.username)}')">${label}</div>`;
+  }).join('');
   sug.style.display = '';
 }
 function addGraphPlayerFromSuggest(id, name) {
@@ -3703,10 +3885,10 @@ function minutesFromAnchor(capturedAt, dayKey) {
 // null = クリップなし（全件）
 function graphPhaseWindow(dayKey) {
   const period = getGBFPeriodName(dayKey + ' 12:00:00', currentEventStartDate());
-  if (period === '予選1日目')   return [720, 1439]; // 19:00〜翌6:59
-  if (period === '予選2日目')   return [0, 1039];   // 7:00〜24:19
-  if (period.startsWith('本戦')) return [0, 1039];   // 7:00〜24:19
-  if (period === 'インターバル') return [0, 1439];   // 全体
+  if (period === '予選1日目')   return [720, 1439]; // 19:00〜翌7:00
+  if (period === '予選2日目')   return [0, 1039];   // 7:00〜24:00
+  if (period === 'インターバル') return [0, 1439];   // 7:00〜翌7:00
+  if (period.startsWith('本戦')) return [0, 1039];   // 7:00〜24:00（本戦1〜4日目とも共通）
   return null; // 開始前/その他はクリップなし
 }
 
@@ -3772,7 +3954,22 @@ async function loadGraphData() {
   // 休み期間（夜間）の帯を検出: 2日目24:00〜3日目7:00、本戦1〜3日目24:00〜翌7:00
   const restBands = computeRestBands(labels, currentEventStartDate(), false);
 
-  return { labels, playerSeries, dayCount, restBands };
+  const lastCapturedAt = snaps.length ? snaps[snaps.length - 1].captured_at : null;
+  return { labels, playerSeries, dayCount, restBands, lastCapturedAt };
+}
+
+// 予測ゴール地点（実時刻）を算出。予選1日目・インターバルは翌7:00、それ以外は当日24:00。
+function predictionGoalDate(lastCapturedAt, startDateStr) {
+  if (!lastCapturedAt || !startDateStr) return null;
+  const period = getGBFPeriodName(lastCapturedAt, startDateStr);
+  const dt = lastCapturedAt.substring(0, 10);
+  const hh = parseInt(lastCapturedAt.substring(11, 13));
+  let [y, m, d] = dt.split('-').map(Number);
+  if (hh < 7) d -= 1; // GBF日基準のカレンダー日（その日7:00始まりの日付）に戻す
+  const needsNightGoal = period === '予選1日目' || period === 'インターバル';
+  return needsNightGoal
+    ? new Date(y, m - 1, d + 1, 7, 0, 0)   // 翌7:00
+    : new Date(y, m - 1, d + 1, 0, 0, 0);  // 当日24:00（＝翌日0:00）
 }
 
 // 古戦場スケジュールに基づく休み期間（夜間）の時間帯を算出
@@ -3852,7 +4049,7 @@ async function renderGraph() {
   loadEl.style.display = 'none';
   if (!result) return;
 
-  const { labels, playerSeries, dayCount, restBands } = result;
+  const { labels, playerSeries, dayCount, restBands, lastCapturedAt } = result;
   const yKey = graphChartType; // 'speed' | 'honor' | 'rank'
   const showPredict = document.getElementById('graph-predict-chk')?.checked && yKey === 'honor';
   const isRank = yKey === 'rank';
@@ -3867,29 +4064,33 @@ async function renderGraph() {
       }
     }
   }
-  // 予測ステップ数: 最終データ時刻から当日24:00までの20分刻み数
+  // 予測ステップ数: 最終データ時刻からゴール地点までの20分刻み数
+  // ゴール地点は期間ごとに異なる（予選1日目・インターバルは翌7:00、それ以外は当日24:00）
+  // 最終データ時刻が20分グリッドにぴったり乗っていないと端数が生じるため、
+  // 切り捨て(floor)だと最後の端数ステップがまるごと欠落しゴール手前で止まってしまう。
+  // 端数も1ステップとして数え(ceil)、最後の点はゴール時刻そのものにクランプする。
   const PRED_STEPS = (() => {
-    if (!showPredict || !labels.length) return 0;
-    const lastLabel = labels[labels.length - 1]; // "MM-DD HH:mm"
-    const timePart = lastLabel.split(' ')[1];
-    if (!timePart) return 0;
-    const [hh, mm] = timePart.split(':').map(Number);
-    const minutesUntilMidnight = 24 * 60 - (hh * 60 + mm);
-    return Math.max(0, Math.floor(minutesUntilMidnight / 20));
+    if (!showPredict || !labels.length || !lastCapturedAt) return 0;
+    const goal = predictionGoalDate(lastCapturedAt, currentEventStartDate());
+    if (!goal) return 0;
+    const lastMs = new Date(lastCapturedAt.replace(' ', 'T')).getTime();
+    const remainingMin = (goal.getTime() - lastMs) / 60000;
+    return Math.max(0, Math.ceil(remainingMin / 20));
   })();
 
-  // 予測ラベル生成（実際の時刻形式 MM-DD HH:mm）
+  // 予測ラベル生成（実際の時刻形式 MM-DD HH:mm）。最後の点はゴール時刻ちょうどにクランプする。
   const predLabels = (() => {
-    if (!showPredict || PRED_STEPS === 0 || !labels.length) return [];
-    const lastLabel = labels[labels.length - 1];
-    const [datePart, timePart] = lastLabel.split(' ');
-    const [hh, mm] = timePart.split(':').map(Number);
-    const baseMins = hh * 60 + mm;
+    if (!showPredict || PRED_STEPS === 0 || !lastCapturedAt) return [];
+    const base = new Date(lastCapturedAt.replace(' ', 'T'));
+    const goal = predictionGoalDate(lastCapturedAt, currentEventStartDate());
     return Array.from({ length: PRED_STEPS }, (_, i) => {
-      const totalMins = baseMins + (i + 1) * 20;
-      const newHH = Math.floor(totalMins / 60) % 24;
-      const newMM = totalMins % 60;
-      return `${datePart} ${String(newHH).padStart(2,'0')}:${String(newMM).padStart(2,'0')}`;
+      const isLast = i === PRED_STEPS - 1;
+      const t = (isLast && goal) ? goal : new Date(base.getTime() + (i + 1) * 20 * 60000);
+      const mm = String(t.getMonth() + 1).padStart(2, '0');
+      const dd = String(t.getDate()).padStart(2, '0');
+      const hh = String(t.getHours()).padStart(2, '0');
+      const mi = String(t.getMinutes()).padStart(2, '0');
+      return `${mm}-${dd} ${hh}:${mi}`;
     });
   })();
   const allLabels  = [...labels, ...predLabels];
@@ -3905,10 +4106,11 @@ async function renderGraph() {
   for (const gp of graphPlayers) {
     const key = String(gp.id ?? gp.name);
     const vals = (playerSeries[key] || {})[yKey] || labels.map(() => null);
+    const displayName = gp.name || `(GN未設定 ID:${gp.id})`;
 
     // 実データセット
     datasets.push({
-      label: gp.name,
+      label: displayName,
       _playerName: gp.name,
       _origColor: gp.color,
       data: showPredict ? [...vals, ...Array(PRED_STEPS).fill(null)] : vals,
@@ -3932,7 +4134,7 @@ async function renderGraph() {
         const predVals = [...predData, ...pred.preds];
 
         datasets.push({
-          label: gp.name + ' (予測)',
+          label: displayName + ' (予測)',
           _playerName: gp.name,
           _origColor: gp.color,
           _isPred: true,
@@ -3969,7 +4171,7 @@ async function renderGraph() {
       const tierNum = Number(borderTier);
       const tierRows = bData.filter(r => r.rank_tier === tierNum).sort((a, b) => a.captured_at.localeCompare(b.captured_at));
       if (tierRows.length) {
-        const TIER_LABELS_B = {1:'1位',10:'10位',50:'50位',100:'100位',500:'500位',1000:'1,000位',2000:'2,000位',100000:'10万位',150000:'15万位',200000:'20万位',270000:'27万位',370000:'37万位'};
+        const TIER_LABELS_B = {1:'1位',10:'10位',50:'50位',100:'100位',500:'500位',1000:'1,000位',2000:'2,000位',10000:'1万位',100000:'10万位',150000:'15万位',200000:'20万位',270000:'27万位',370000:'37万位'};
         // ラベルにマッチする形式にする（MM-DD HH:mm）
         const borderTimeMap = {};
         for (let i = 0; i < tierRows.length; i++) {

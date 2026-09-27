@@ -27,6 +27,83 @@ window.__STATIC_CACHE_PROMISE__=fetch('./../guild-data.json.gz')
   .catch(function(e){window.__STATIC_CACHE__={};console.warn('GBF: データ読み込み失敗',e);});
 </script>
 <style>
+/* 共通デザイントークン（dashboard / border / guild で共有）
+ * ページ固有の値（--row-* など）は各ページの <style> 側に置く。
+ * 静的エクスポート時は export.js の embedStaticScripts でインライン化される。 */
+:root {
+  /* === Background & Theme === */
+  --theme-bg: #0a0a0a;
+  --theme-surface: #111111;
+  --theme-surface-container: #191919;
+  --theme-surface-container-high: #242424;
+  --theme-outline: #363636;
+  --theme-outline-variant: #202020;
+  --theme-on-surface: #e2e8f0;
+  --theme-on-surface-variant: #8a9ab0;
+  --chart-grid-color: rgba(255,255,255,0.09);
+  /* === Element Color（theme-manager.js がイベント属性に応じて上書き） === */
+  --elem-color: #3b82f6;
+  --elem-color-light: #60a5fa99;
+  /* === MD3 Design Tokens === */
+  --md-surface-dim: var(--theme-bg);
+  --md-surface: var(--theme-surface);
+  --md-surface-container: var(--theme-surface-container);
+  --md-surface-container-high: var(--theme-surface-container-high);
+  --md-surface-bright: var(--theme-surface-container-high);
+  --md-on-surface: var(--theme-on-surface);
+  --md-on-surface-variant: var(--theme-on-surface-variant);
+  --md-outline: var(--theme-outline);
+  --md-outline-variant: var(--theme-outline-variant);
+  --md-primary: var(--elem-color);
+  --md-primary-dim: var(--elem-color);
+  --md-primary-container: var(--theme-surface-container-high);
+  --md-on-primary-container: var(--theme-on-surface);
+  --md-secondary: var(--elem-color-light);
+  --md-secondary-container: var(--theme-surface-container-high);
+  --md-success: #4ade80;
+  --md-warning: #fbbf24;
+  --md-error: #f87171;
+  --md-shape-xs: 4px;
+  --md-shape-sm: 8px;
+  --md-shape-md: 12px;
+  --md-shape-lg: 16px;
+  --md-shape-full: 9999px;
+  --md-ease: cubic-bezier(0.2, 0, 0, 1);
+  --md-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --md-duration-short: 150ms;
+  --md-duration-medium: 300ms;
+  --md-duration-long: 500ms;
+  --md-elevation-1: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --md-elevation-2: 0 2px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+  --md-elevation-3: 0 4px 12px rgba(0,0,0,0.3), 0 3px 6px rgba(0,0,0,0.2);
+  /* 補足テキスト（タブの時間帯表示など）: 背景に対してコントラスト4.5:1以上を確保した色 */
+  --text-caption: #a3b1c4;
+}
+
+html[data-theme="light"] {
+  --theme-bg: #f4f5f7;
+  --theme-surface: #ffffff;
+  --theme-surface-container: #f1f2f4;
+  --theme-surface-container-high: #e7e9ec;
+  --theme-outline: #cfd3da;
+  --theme-outline-variant: #e2e5ea;
+  --theme-on-surface: #1a1d21;
+  --theme-on-surface-variant: #586173;
+  --chart-grid-color: rgba(0,0,0,0.08);
+  --md-elevation-1: 0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+  --md-elevation-2: 0 2px 6px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+  --md-elevation-3: 0 4px 12px rgba(0,0,0,0.12), 0 3px 6px rgba(0,0,0,0.08);
+  --text-caption: #4b5563;
+}
+
+/* 日本語フォントを明示（Windowsの見た目は従来と同じMeiryo、macOS/iOSはヒラギノに統一） */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+               'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+}
+
+</style>
+<style>
 /* layout.css — Tailwind CDN 代替ユーティリティ (dashboard/border/guild 実使用クラスのみ) */
 
 /* --- Display --- */
@@ -304,37 +381,12 @@ function ensureChartJs() {
 }
 </script>
 <style>
+  /* 共通トークン（--theme-* / --elem-* / --md-*）は /css/theme.css に一元化 */
   :root {
-    --theme-bg:#0a0a0a; --theme-surface:#111111; --theme-surface-container:#191919;
-    --theme-surface-container-high:#242424; --theme-outline:#363636; --theme-outline-variant:#202020;
-    --theme-on-surface:#e2e8f0; --theme-on-surface-variant:#8a9ab0;
-    --chart-grid-color:rgba(255,255,255,0.09);
-    --elem-color:#3b82f6; --elem-color-light:#60a5fa99;
-    --md-surface-dim:var(--theme-bg); --md-surface:var(--theme-surface);
-    --md-surface-container:var(--theme-surface-container);
-    --md-surface-container-high:var(--theme-surface-container-high);
-    --md-surface-bright:var(--theme-surface-container-high);
-    --md-on-surface:var(--theme-on-surface); --md-on-surface-variant:var(--theme-on-surface-variant);
-    --md-outline:var(--theme-outline); --md-outline-variant:var(--theme-outline-variant);
-    --md-primary:var(--elem-color); --md-primary-dim:var(--elem-color);
-    --md-primary-container:var(--theme-surface-container-high);
-    --md-on-primary-container:var(--theme-on-surface);
-    --md-secondary:var(--elem-color-light); --md-secondary-container:var(--theme-surface-container-high);
-    --md-success:#4ade80; --md-warning:#fbbf24; --md-error:#f87171;
-    --md-shape-xs:4px; --md-shape-sm:8px; --md-shape-md:12px; --md-shape-lg:16px; --md-shape-full:9999px;
-    --md-ease:cubic-bezier(0.2,0,0,1); --md-duration-short:150ms; --md-duration-medium:300ms;
-    --md-elevation-1:0 1px 3px rgba(0,0,0,0.3); --md-elevation-2:0 2px 6px rgba(0,0,0,0.3);
-    --md-elevation-3:0 4px 12px rgba(0,0,0,0.3);
     --row-top1-bg:#2a2200; --row-top2-bg:#1e1e2e; --row-top3-bg:#261400;
     --row-odd-bg:rgba(255,255,255,0.04); --row-hairline:rgba(255,255,255,0.05); --row-hover:rgba(255,255,255,0.05);
   }
   html[data-theme="light"]{
-    --theme-bg:#f4f5f7; --theme-surface:#ffffff; --theme-surface-container:#f1f2f4;
-    --theme-surface-container-high:#e7e9ec; --theme-outline:#cfd3da; --theme-outline-variant:#e2e5ea;
-    --theme-on-surface:#1a1d21; --theme-on-surface-variant:#586173;
-    --chart-grid-color:rgba(0,0,0,0.08);
-    --md-elevation-1:0 1px 3px rgba(0,0,0,0.10); --md-elevation-2:0 2px 6px rgba(0,0,0,0.10);
-    --md-elevation-3:0 4px 12px rgba(0,0,0,0.12);
     --row-top1-bg:#fdf6cf; --row-top2-bg:#edf1f6; --row-top3-bg:#fce4e4;
     --row-odd-bg:#eaf2fb; --row-hairline:#e3e6ea; --row-hover:rgba(26,115,232,0.10);
   }
@@ -344,7 +396,7 @@ function ensureChartJs() {
   html[data-theme="light"] .score-bar-bg{opacity:0.30;}
   html[data-theme="light"] .score-diff{color:var(--md-on-surface-variant) !important;font-weight:600;}
   html,body{min-height:100%;margin:0;padding:0;}
-  body{background:var(--theme-bg);color:var(--theme-on-surface);font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;}
+  body{background:var(--theme-bg);color:var(--theme-on-surface);display:flex;flex-direction:column;}
   .main-wrap{flex:1;display:flex;flex-direction:column;}
   /* Header */
   .header{background:var(--theme-surface);border-bottom:2px solid var(--elem-color);padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,0.5);}
@@ -363,7 +415,8 @@ function ensureChartJs() {
   .tab-btn.active{background:var(--md-surface-container-high);color:var(--md-primary);border-color:var(--md-primary);box-shadow:0 0 8px color-mix(in srgb,var(--elem-color) 40%,transparent);}
   .tab-btn:not(.active){background:var(--md-surface-container-high);color:var(--md-on-surface-variant);}
   .tab-btn:not(.active):hover{background:var(--md-surface-bright);color:var(--md-on-surface);}
-  .tab-sub{font-size:0.5625rem;font-weight:400;opacity:0.65;}
+  .tab-sub{font-size:0.6875rem;font-weight:400;color:var(--text-caption);}
+  .tab-btn.active .tab-sub{color:var(--md-on-surface);}
   /* Table */
   table{width:100%;border-collapse:collapse;table-layout:fixed;}
   th{background:var(--md-surface);color:var(--md-on-surface-variant);font-size:0.6875rem;padding:8px 12px;letter-spacing:0.04em;text-transform:uppercase;font-weight:500;position:sticky;top:0;z-index:2;white-space:nowrap;overflow:hidden;}
@@ -379,7 +432,7 @@ function ensureChartJs() {
   .score-bar-bg{position:absolute;left:0;top:0;bottom:0;border-radius:var(--md-shape-xs);opacity:0.15;pointer-events:none;}
   .score-diff{position:relative;font-weight:700;font-size:0.875rem;display:block;line-height:1.3;}
   /* Badges */
-  .type-badge{display:inline-block;padding:4px 12px;border-radius:var(--md-shape-full);font-size:0.75rem;font-weight:700;}
+  .type-badge{display:inline-block;padding:4px 12px;border-radius:var(--md-shape-full);font-size:0.75rem;font-weight:700;white-space:nowrap;flex-shrink:0;}
   .type-20min{background:var(--md-secondary-container);color:var(--md-on-primary-container);}
   .type-daily{background:#1a3020;color:var(--md-success);}
   .type-morning{background:#3b2f00;color:var(--md-warning);}
@@ -397,6 +450,12 @@ function ensureChartJs() {
   .gn-pinned{font-weight:800;text-decoration:underline dotted;}
   .gn-profile-link{color:var(--md-on-surface-variant);font-size:0.625rem;text-decoration:none;margin-left:4px;transition:color var(--md-duration-short) var(--md-ease);vertical-align:middle;}
   .gn-profile-link:hover{color:var(--md-primary);}
+  /* タップ領域の拡張（見た目は変えず当たり判定だけ広げる。外部CSSは7日キャッシュのためHTML側に置く） */
+  .hist-btn,.gn-clickable,.gn-profile-link{position:relative;}
+  .hist-btn::before,.gn-clickable::before,.gn-profile-link::before{content:'';position:absolute;top:-10px;bottom:-10px;}
+  .hist-btn::before{left:-4px;right:-2px;}
+  .gn-clickable::before{left:0;right:0;}
+  .gn-profile-link::before{left:-3px;right:-6px;}
   /* ソート & カラムリサイズ */
   th.sortable{cursor:pointer;position:relative;}
   th.sortable:hover{color:var(--md-on-surface);}
@@ -968,6 +1027,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <button id="score-abs-btn" class="gchart-type-btn active" onclick="setScoreOrigin('abs')">実数</button>
           <button id="score-rel-btn" class="gchart-type-btn" onclick="setScoreOrigin('rel')">期間増加</button>
         </div>
+        <!-- 予測線（累計スコア選択時のみ表示。当日24:00までの予測のみ） -->
+        <label id="graph-predict-ctrl" style="display:none;align-items:center;gap:4px;font-size:12px;color:var(--md-on-surface-variant);cursor:pointer">
+          <input type="checkbox" id="graph-predict-chk" onchange="renderGuildGraph()"> 予測線
+        </label>
         <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--md-on-surface-variant);">
           <span>期間:</span>
           <select id="graph-from-select" onchange="renderGuildGraph()" style="font-size:12px;padding:2px 6px;"></select>
@@ -1509,7 +1572,8 @@ function renderTable(data) {
   typeEl.className = 'type-badge ' + (typeMap[data.type] || 'type-20min');
   typeEl.textContent = data.type + (data.isLive ? '(進行中)' : '');
   const fmt = s => s ? s.substring(5, 16) : '--';
-  document.getElementById('stat-period').textContent = `${fmt(data.before)} → ${fmt(data.after)}`;
+  const sameDay = data.before && data.after && data.before.substring(0, 10) === data.after.substring(0, 10);
+  document.getElementById('stat-period').textContent = `${fmt(data.before)} → ${sameDay ? data.after.substring(11, 16) : fmt(data.after)}`;
   document.getElementById('stat-count').textContent = `${guilds.length}団`;
   document.getElementById('stat-bar').style.display = 'flex';
 
@@ -1560,7 +1624,7 @@ function renderTable(data) {
     const battleMark = bInfo ? `<span class="battle-row-mark" style="background:${bInfo.color}"></span>` : '';
     const gnCls = bInfo ? ' gn-pinned' : '';
     const gnCol = bInfo ? ` style="color:${bInfo.color}"` : '';
-    const histBtn = `<span style="cursor:pointer;color:var(--md-on-surface-variant);font-size:10px;margin-right:3px" onclick="event.stopPropagation();openGuildModal(${g.guild_id},'${escHtml(g.name)}')" title="履歴を見る">📋</span>`;
+    const histBtn = `<span class="hist-btn" style="cursor:pointer;color:var(--md-on-surface-variant);font-size:10px;margin-right:3px" onclick="event.stopPropagation();openGuildModal(${g.guild_id},'${escHtml(g.name)}')" title="履歴を見る">📋</span>`;
     const profileLink = `<a class="gn-profile-link" href="https://game.granbluefantasy.jp/#guild/detail/${g.guild_id}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="GBF団ページ">↗</a>`;
     const starBtn = `<button class="watch-star ${wOn?'on':''}" onclick="toggleWatch(${g.guild_id},'${escHtml(g.name)}')" title="${wOn?'注目解除':'注目'}">★</button>`;
     const gnCell = `${battleMark}${histBtn}<span class="gn-clickable${gnCls}"${gnCol} onclick="toggleBattleGuild(${g.guild_id},'${escHtml(g.name)}')">${escHtml(g.name)}</span>${profileLink}${starBtn}`;
@@ -2068,9 +2132,11 @@ function setGChartType(t) {
   document.getElementById('gchart-speed-btn')?.classList.toggle('active', t === 'speed');
   document.getElementById('gchart-score-btn')?.classList.toggle('active', t === 'score');
   document.getElementById('gchart-rank-btn')?.classList.toggle('active', t === 'rank');
-  // 累計スコア時のみ期間増切替を表示
+  // 累計スコア時のみ期間増切替・予測線チェックを表示
   const originCtrl = document.getElementById('score-origin-ctrl');
   originCtrl.style.display = t === 'score' ? 'flex' : 'none';
+  const predictCtrl = document.getElementById('graph-predict-ctrl');
+  if (predictCtrl) predictCtrl.style.display = t === 'score' ? 'flex' : 'none';
   renderGuildGraph();
 }
 function setScoreOrigin(mode) {
@@ -2202,10 +2268,15 @@ async function loadGuildGraphData() {
   snaps.sort((a, b) => a.captured_at.localeCompare(b.captured_at));
 
   // 単日選択時は7:00〜24:05でクリップ（複数日選択時はクリップせず夜間帯も連続表示。個人ランキングと同仕様）
+  // ただし予選1日目（イベント開始日）は団ランキングも夜通し動くため、翌7:00までクリップしない
   if (dayCount === 1) {
+    const eventStartDate = loadedEvents.find(e => e.id === currentEventId)?.start_date || null;
+    const isDay1 = days[0] === eventStartDate;
     const [yy, mm, dd] = days[0].split('-').map(Number);
-    const startMs = new Date(yy, mm - 1, dd, 7, 0, 0).getTime();
-    const endMs   = new Date(yy, mm - 1, dd + 1, 0, 20, 0).getTime(); // 24:00境界スナップの着地ズレを吸収
+    const startMs = new Date(yy, mm - 1, dd, isDay1 ? 19 : 7, 0, 0).getTime();
+    const endMs   = isDay1
+      ? new Date(yy, mm - 1, dd + 1, 7, 20, 0).getTime()  // 予選1日目: 19:00〜翌7:00（夜通し）
+      : new Date(yy, mm - 1, dd + 1, 0, 20, 0).getTime(); // それ以外: 7:00〜24:05（24:00境界スナップの着地ズレを吸収）
     snaps = snaps.filter(s => {
       const t = new Date(s.captured_at.replace(' ', 'T')).getTime();
       return t >= startMs && t <= endMs;
@@ -2225,9 +2296,16 @@ async function loadGuildGraphData() {
     const data = snapDataList[si];
     if (!data?.guilds) continue;
     labels.push(snap.captured_at.substring(5, 16));
+    // サーバー障害等でスナップショット間隔が通常の20分より大きく開いた場合、scoreDiffは
+    // その空白期間全体の増加量になってしまい「20分速」として表示すると異常な急騰スパイクに
+    // 見えるため、間隔が通常の1.5倍(30分)を超える点は速度なし(null)として線を途切れさせる。
+    const beforeMs = data.before ? new Date(data.before.replace(' ', 'T')).getTime() : null;
+    const afterMs  = data.after  ? new Date(data.after.replace(' ', 'T')).getTime()  : null;
+    const gapMin = beforeMs && afterMs ? (afterMs - beforeMs) / 60000 : 0;
+    const gapIsAbnormal = gapMin > 30;
     for (const g of graphGuilds) {
       const gd = data.guilds.find(x => x.guild_id === g.id);
-      guildSeries[g.id].speed.push(gd ? (gd.scoreDiff ?? null) : null);
+      guildSeries[g.id].speed.push(gd && !gapIsAbnormal ? (gd.scoreDiff ?? null) : null);
       guildSeries[g.id].score.push(gd ? (gd.score ?? null) : null);
       guildSeries[g.id].rank.push(gd ? (gd.rank ?? null) : null);
     }
@@ -2237,7 +2315,23 @@ async function loadGuildGraphData() {
   const eventStartDate = loadedEvents.find(e => e.id === currentEventId)?.start_date || null;
   const restBands = computeRestBands(labels, eventStartDate, true);
 
-  return { labels, guildSeries, dayCount, restBands };
+  const lastCapturedAt = snaps.length ? snaps[snaps.length - 1].captured_at : null;
+  return { labels, guildSeries, dayCount, restBands, lastCapturedAt };
+}
+
+// 予測ゴール地点（実時刻）を算出。団ランキングは予選1日目（イベント開始日）のみ夜通し運用のため翌7:00、
+// それ以外（本戦1〜4日目など）は当日24:00がゴール（インターバル日・本戦の夜間は団ランキング自体が動かないため対象外）。
+function predictionGoalDate(lastCapturedAt, eventStartDate) {
+  if (!lastCapturedAt || !eventStartDate) return null;
+  const dt = lastCapturedAt.substring(0, 10);
+  const hh = parseInt(lastCapturedAt.substring(11, 13));
+  let [y, m, d] = dt.split('-').map(Number);
+  if (hh < 7) d -= 1; // GBF日基準のカレンダー日（その日7:00始まりの日付）に戻す
+  const gbfDayStr = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const isDay1 = gbfDayStr === eventStartDate;
+  return isDay1
+    ? new Date(y, m - 1, d + 1, 7, 0, 0)   // 予選1日目: 翌7:00
+    : new Date(y, m - 1, d + 1, 0, 0, 0);  // それ以外: 当日24:00（＝翌日0:00）
 }
 
 // 古戦場スケジュールに基づく休み期間（夜間）の時間帯を算出
@@ -2277,6 +2371,25 @@ function computeRestBands(labels, startDateStr, mergeInterval) {
   return bands;
 }
 
+// ---- 線形予測（個人ランキングと同仕様。直近8点から当日24:00までを予測） ----
+function computeLinearPrediction(values, steps) {
+  const pts = values.filter(v => v != null);
+  if (pts.length < 2) return null;
+  const recent = pts.slice(-8);
+  const n = recent.length;
+  const xs = recent.map((_, i) => i);
+  const ys = recent;
+  const sx = xs.reduce((a,b)=>a+b,0), sy = ys.reduce((a,b)=>a+b,0);
+  const sxy = xs.reduce((a,x,i)=>a+x*ys[i],0), sxx = xs.reduce((a,x)=>a+x*x,0);
+  const denom = n*sxx - sx*sx;
+  if (!denom) return null;
+  const slope = (n*sxy - sx*sy) / denom;
+  const intercept = (sy - slope*sx) / n;
+  const preds = [];
+  for (let i = 1; i <= steps; i++) preds.push(Math.round(intercept + slope*(n-1+i)));
+  return { slope, intercept, preds };
+}
+
 async function renderGuildGraph() {
   if (document.getElementById('graph-modal').style.display === 'none') return;
   await ensureChartJs();
@@ -2294,12 +2407,43 @@ async function renderGuildGraph() {
   loadEl.style.display = 'none';
   if (!result) return;
 
-  const { labels, guildSeries, dayCount, restBands } = result;
+  const { labels, guildSeries, dayCount, restBands, lastCapturedAt } = result;
   const yKey = gChartType;
   const isRank = yKey === 'rank';
   const useRelative = yKey === 'score' && scoreOrigin === 'rel';
+  const showPredict = document.getElementById('graph-predict-chk')?.checked && yKey === 'score';
 
-  const datasets = graphGuilds.map(g => {
+  // 予測ステップ数: 最終データ時刻からゴール地点までの20分刻み数
+  // ゴール地点は予選1日目のみ翌7:00、それ以外は当日24:00
+  const eventStartDateForPred = loadedEvents.find(e => e.id === currentEventId)?.start_date || null;
+  const PRED_STEPS = (() => {
+    if (!showPredict || !labels.length || !lastCapturedAt) return 0;
+    const goal = predictionGoalDate(lastCapturedAt, eventStartDateForPred);
+    if (!goal) return 0;
+    const lastMs = new Date(lastCapturedAt.replace(' ', 'T')).getTime();
+    const remainingMin = (goal.getTime() - lastMs) / 60000;
+    // floorだとゴール直前で切り捨てられ、予測線がゴールに届かず手前で止まってしまうためceilにする
+    return Math.max(0, Math.ceil(remainingMin / 20));
+  })();
+  // 最後の点はゴール時刻ちょうどにクランプする（20分刻みのままだとゴールを少し超えてしまうため）
+  const predLabels = (() => {
+    if (!showPredict || PRED_STEPS === 0 || !lastCapturedAt) return [];
+    const base = new Date(lastCapturedAt.replace(' ', 'T'));
+    const goal = predictionGoalDate(lastCapturedAt, eventStartDateForPred);
+    return Array.from({ length: PRED_STEPS }, (_, i) => {
+      const isLast = i === PRED_STEPS - 1;
+      const t = (isLast && goal) ? goal : new Date(base.getTime() + (i + 1) * 20 * 60000);
+      const mm = String(t.getMonth() + 1).padStart(2, '0');
+      const dd = String(t.getDate()).padStart(2, '0');
+      const hh = String(t.getHours()).padStart(2, '0');
+      const mi = String(t.getMinutes()).padStart(2, '0');
+      return `${mm}-${dd} ${hh}:${mi}`;
+    });
+  })();
+  const allLabels = [...labels, ...predLabels];
+
+  const datasets = [];
+  for (const g of graphGuilds) {
     let series = (guildSeries[g.id] || {})[yKey] || labels.map(() => null);
     // 期間増加モード: 最初の非null値を 0 基準に変換
     if (useRelative) {
@@ -2307,11 +2451,11 @@ async function renderGuildGraph() {
       const base = baseIdx >= 0 ? series[baseIdx] : 0;
       series = series.map(v => v != null ? v - base : null);
     }
-    return {
+    datasets.push({
       label: g.name,
       _guildId: g.id,
       _origColor: g.color,
-      data: series,
+      data: showPredict ? [...series, ...Array(PRED_STEPS).fill(null)] : series,
       borderColor: g.color,
       backgroundColor: g.color + '15',
       // 点サイズ: ユーザーが「ポイント表示」で明示的にON/OFF・サイズを指定可能
@@ -2320,8 +2464,32 @@ async function renderGuildGraph() {
       tension: 0,
       spanGaps: yKey === 'score',
       borderWidth: 2,
-    };
-  });
+    });
+
+    if (showPredict) {
+      const pred = computeLinearPrediction(series, PRED_STEPS);
+      if (pred) {
+        const lastRealIdx = series.reduce((last, v, i) => v != null ? i : last, -1);
+        const predData = Array(labels.length).fill(null);
+        if (lastRealIdx >= 0) predData[lastRealIdx] = series[lastRealIdx];
+        datasets.push({
+          label: g.name + ' (予測)',
+          _guildId: g.id,
+          _origColor: g.color,
+          _isPred: true,
+          data: [...predData, ...pred.preds],
+          borderColor: g.color,
+          borderDash: [6, 4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          tension: 0,
+          spanGaps: true,
+          fill: false,
+        });
+      }
+    }
+  }
 
   const areaEl = document.getElementById('graph-chart-area');
   const canvasW = areaEl ? areaEl.clientWidth || 320 : 320;
@@ -2356,7 +2524,7 @@ async function renderGuildGraph() {
   if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(ctx, {
     type: 'line',
-    data: { labels: labels.map(roundTimeLabel), datasets },
+    data: { labels: allLabels.map(roundTimeLabel), datasets },
     plugins: [boundaryPlugin],
     options: {
       responsive: false, maintainAspectRatio: false,
